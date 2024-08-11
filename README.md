@@ -4,7 +4,7 @@ rjj is a simple cmd-based data cleaning tool
 ```
 pip install rjj
 ```
-#### update cgg
+#### update rjj
 ```
 pip install rjj --upgrade
 ```
