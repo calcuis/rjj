@@ -19,7 +19,7 @@ rjj -h
 ### jointer and splitter
 joint or split your csv file(s)
 #### jointer
-joint all csv files in the current directory together as output.csv; all file names will be stored in the first field
+joint all csv files in the current directory together as output.csv; all file names will be stored in the newly created first field
 ```
 rjj j
 ```
