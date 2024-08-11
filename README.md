@@ -28,3 +28,8 @@ split the selected csv file into different csv files and name it according to th
 ```
 rjj s
 ```
+#### detector
+detect the co-existing record(s) between two csv files; select two csv files to execute the detection process, then assign a name for the output file; coexist-record will be indicated in a newly created column `Coexist`
+```
+rjj d
+```
