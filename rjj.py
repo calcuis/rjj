@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.0.1"
+__version__="0.0.2"
 
 import argparse, os
 import pandas as pd
@@ -56,11 +56,11 @@ def spliter():
 def __init__():
     parser = argparse.ArgumentParser(description="rjj will execute different functions based on command-line arguments")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
-  
+
     subparsers = parser.add_subparsers(title="subcommands", dest="subcommand", help="choose a subcommand:")
     subparsers.add_parser('j', help='joint csv(s) together')
     subparsers.add_parser('s', help='split csv to piece(s)')
-  
+
     args = parser.parse_args()
     if args.subcommand == 'j':
         jointer()
