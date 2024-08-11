@@ -1,5 +1,5 @@
 ### rjj (read-joint-jet)
-rjj is a simple cmd-based data transforming tool
+rjj is a simple cmd-based data transforming/analysis tool
 #### install it via pip/pip3
 ```
 pip install rjj
