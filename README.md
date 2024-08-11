@@ -16,13 +16,13 @@ rjj -v
 ```
 rjj -h
 ```
-### jointer and spliter
+### jointer and splitter
 joint or split your csv file(s)
 #### jointer
 ```
 rjj j
 ```
-#### spliter
+#### splitter
 ```
 rjj s
 ```
