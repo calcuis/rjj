@@ -1,9 +1,52 @@
 # !/usr/bin/env python3
 
-__version__="0.0.3"
+__version__="0.0.4"
 
 import argparse, os
 import pandas as pd
+
+def detector():
+    csv_files = [file for file in os.listdir() if file.endswith('.csv')]
+
+    if csv_files:
+        print("CSV file(s) available. Select the 1st csv file:")
+        
+        for index, file_name in enumerate(csv_files, start=1):
+            print(f"{index}. {file_name}")
+
+        choice = input(f"Enter your choice (1 to {len(csv_files)}): ")
+        choice_index=int(choice)-1
+        input1=csv_files[choice_index]
+
+        print("CSV file(s) available. Select the 2nd csv file:")
+        
+        for index, file_name in enumerate(csv_files, start=1):
+            print(f"{index}. {file_name}")
+
+        choice = input(f"Enter your choice (1 to {len(csv_files)}): ")
+        choice_index=int(choice)-1
+        input2=csv_files[choice_index]
+
+        output = input("Give a name to the output file: ")
+        
+        try:              
+            file1 = pd.read_csv(input1)
+            file2 = pd.read_csv(input2)
+
+            columns_to_merge = list(file1.columns)
+            merged = pd.merge(file1, file2, on=columns_to_merge, how='left', indicator=True)
+
+            merged['Coexist'] = merged['_merge'].apply(lambda x: 1 if x == 'both' else '')
+            merged = merged.drop(columns=['_merge'])
+            merged.to_csv(f'{output}.csv', index=False)
+
+            print(f"Results of coexist-record detection saved to {output}.csv")
+
+        except (ValueError, IndexError):
+            print("Invalid choice. Please enter a valid number.")
+    else:
+        print("No CSV files are available in the current directory.")
+        input("--- Press ENTER To Exit ---")
 
 def jointer(output_file):
     output = f'{output_file}.csv'
@@ -60,6 +103,7 @@ def __init__():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
 
     subparsers = parser.add_subparsers(title="subcommands", dest="subcommand", help="choose a subcommand:")
+    subparsers.add_parser('d', help='detect coexist-record')
     subparsers.add_parser('j', help='joint csv(s) together')
     subparsers.add_parser('s', help='split csv to piece(s)')
 
@@ -69,3 +113,5 @@ def __init__():
         jointer(output_file)
     elif args.subcommand == 's':
         spliter()
+    elif args.subcommand == 'd':
+        detector()
