@@ -1,12 +1,13 @@
 # !/usr/bin/env python3
 
-__version__="0.0.2"
+__version__="0.0.3"
 
 import argparse, os
 import pandas as pd
 
-def jointer():
-    csv_files = [f for f in os.listdir() if f.endswith('.csv') and f != 'output.csv']
+def jointer(output_file):
+    output = f'{output_file}.csv'
+    csv_files = [f for f in os.listdir() if f.endswith('.csv') and f != output]
     dataframes = []
 
     for file in csv_files:
@@ -17,9 +18,9 @@ def jointer():
 
     combined_df = pd.concat(dataframes, ignore_index=True)
     combined_df = combined_df[['File'] + [col for col in combined_df.columns if col != 'File']]
-    combined_df.to_csv('output.csv', index=False)
+    combined_df.to_csv(output, index=False)
 
-    print("Combined CSV file saved as output.csv")
+    print(f"Combined CSV file saved as {output}")
 
 def spliter():
     csv_files = [file for file in os.listdir() if file.endswith('.csv')]
@@ -36,6 +37,7 @@ def spliter():
             choice_index=int(choice)-1
             selected_file=csv_files[choice_index]
             print(f"File: {selected_file} is selected!")
+            
             df = pd.read_csv(selected_file)
             reference_field = df.columns[0]
             groups = df.groupby(reference_field)
@@ -63,6 +65,7 @@ def __init__():
 
     args = parser.parse_args()
     if args.subcommand == 'j':
-        jointer()
+        output_file = input("Give a name to the output file: ")
+        jointer(output_file)
     elif args.subcommand == 's':
         spliter()
