@@ -34,7 +34,7 @@ detect the co-existing record(s) between two csv files; select two csv files to 
 rjj d
 ```
 #### splitter x
-split the selected excel (.xls or .xlsx) into pieces and name it according to the value in the first field of that selected excel
+split the selected excel (.xls or .xlsx) into pieces and name it according to the value in the first field of that selected excel file
 ```
 rjj x
 ```
