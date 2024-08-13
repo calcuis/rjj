@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.0.4"
+__version__="0.0.5"
 
 import argparse, os
 import pandas as pd
@@ -98,6 +98,39 @@ def spliter():
         print("No CSV files are available in the current directory.")
         input("--- Press ENTER To Exit ---")
 
+def spliterx():
+    excel_files = [file for file in os.listdir() if file.endswith('.xls') or file.endswith('.xlsx')]
+
+    if excel_files:
+        print("Excel file(s) available. Select which one to split:")
+        
+        for index, file_name in enumerate(excel_files, start=1):
+            print(f"{index}. {file_name}")
+
+        choice = input(f"Enter your choice (1 to {len(excel_files)}): ")
+        
+        try:
+            choice_index=int(choice)-1
+            selected_file=excel_files[choice_index]
+            print(f"File: {selected_file} is selected!")
+            
+            df = pd.read_excel(selected_file)
+            reference_field = df.columns[0]
+            groups = df.groupby(reference_field)
+
+            for file_id, group in groups:
+                group = group.drop(columns=[reference_field]) 
+                output_file = f'{file_id}.xlsx'
+                group.to_excel(output_file, index=False)
+
+            print("Excel files have been split and saved successfully.")
+
+        except (ValueError, IndexError):
+            print("Invalid choice. Please enter a valid number.")
+    else:
+        print("No excel files are available in the current directory.")
+        input("--- Press ENTER To Exit ---")
+
 def __init__():
     parser = argparse.ArgumentParser(description="rjj will execute different functions based on command-line arguments")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
@@ -106,6 +139,7 @@ def __init__():
     subparsers.add_parser('d', help='detect coexist-record')
     subparsers.add_parser('j', help='joint csv(s) together')
     subparsers.add_parser('s', help='split csv to piece(s)')
+    subparsers.add_parser('x', help='split .xls/.xlsx file')
 
     args = parser.parse_args()
     if args.subcommand == 'j':
@@ -113,5 +147,7 @@ def __init__():
         jointer(output_file)
     elif args.subcommand == 's':
         spliter()
+    elif args.subcommand == 'x':
+        spliterx()
     elif args.subcommand == 'd':
         detector()
