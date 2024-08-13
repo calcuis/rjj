@@ -1,9 +1,50 @@
 # !/usr/bin/env python3
 
-__version__="0.0.5"
+__version__="0.0.6"
 
-import argparse, os
+import argparse, os, json, csv
 import pandas as pd
+
+def convertor():
+    json_files = [file for file in os.listdir() if file.endswith('.json')]
+
+    if json_files:
+        print("JSON file(s) available. Select which one to convert:")
+        
+        for index, file_name in enumerate(json_files, start=1):
+            print(f"{index}. {file_name}")
+
+        choice = input(f"Enter your choice (1 to {len(json_files)}): ")
+        choice_index=int(choice)-1
+        selected_file=json_files[choice_index]
+        print(f"File: {selected_file} is selected!")
+        
+        try:
+            with open(selected_file, encoding='utf-8-sig') as json_file:
+                jsondata = json.load(json_file)
+            
+            output = input("Give a name to the output file: ")
+
+            data_file = open(f'{output}.csv', 'w', newline='', encoding='utf-8-sig')
+            csv_writer = csv.writer(data_file)
+
+            count = 0
+            for data in jsondata:
+                if count == 0:
+                    header = data.keys()
+                    csv_writer.writerow(header)
+                    count += 1
+                csv_writer.writerow(data.values())
+
+            data_file.close()
+
+            print(f"Converted file saved to {output}.csv")
+
+        except (ValueError, IndexError):
+            print("Invalid choice. Please enter a valid number.")
+    else:
+        print("No JSON files are available in the current directory.")
+        input("--- Press ENTER To Exit ---")
 
 def detector():
     csv_files = [file for file in os.listdir() if file.endswith('.csv')]
@@ -29,7 +70,7 @@ def detector():
 
         output = input("Give a name to the output file: ")
         
-        try:              
+        try:
             file1 = pd.read_csv(input1)
             file2 = pd.read_csv(input2)
 
@@ -98,7 +139,7 @@ def spliter():
         print("No CSV files are available in the current directory.")
         input("--- Press ENTER To Exit ---")
 
-def spliterx():
+def xpliter():
     excel_files = [file for file in os.listdir() if file.endswith('.xls') or file.endswith('.xlsx')]
 
     if excel_files:
@@ -136,10 +177,11 @@ def __init__():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
 
     subparsers = parser.add_subparsers(title="subcommands", dest="subcommand", help="choose a subcommand:")
-    subparsers.add_parser('d', help='detect coexist-record')
-    subparsers.add_parser('j', help='joint csv(s) together')
-    subparsers.add_parser('s', help='split csv to piece(s)')
-    subparsers.add_parser('x', help='split .xls/.xlsx file')
+    subparsers.add_parser('c', help='convert json to csv')
+    subparsers.add_parser('d', help='detect coexisting record(s)')
+    subparsers.add_parser('j', help='joint all csv(s) together')
+    subparsers.add_parser('s', help='split csv into piece(s)')
+    subparsers.add_parser('x', help='split excel .xls/.xlsx')
 
     args = parser.parse_args()
     if args.subcommand == 'j':
@@ -147,7 +189,9 @@ def __init__():
         jointer(output_file)
     elif args.subcommand == 's':
         spliter()
-    elif args.subcommand == 'x':
-        spliterx()
     elif args.subcommand == 'd':
         detector()
+    elif args.subcommand == 'x':
+        xpliter()
+    elif args.subcommand == 'c':
+        convertor()
