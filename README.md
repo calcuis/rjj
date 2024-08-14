@@ -44,7 +44,7 @@ split the selected excel (.xls or .xlsx) to pieces and name it according to the 
 rjj x
 ```
 #### joint
-joint all excels (.xls and .xlsx) in the current directory together*; all file names will be stored in the first field of the newly created column `File`; when you execute the command you will be asked for assigning a name for the output file
+joint all excels (.xls and .xlsx) in the current directory together*; all file names will be stored in the first field of the newly created column `File`; when you execute the command you might be asked for assigning a name for the output file
 ```
 rjj t
 ```
