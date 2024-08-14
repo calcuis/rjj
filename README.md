@@ -34,12 +34,12 @@ joint all csv files in the current directory together; all file names will be st
 rjj j
 ```
 #### splitter
-split the selected csv file into different csv files and name it according to the value in the first field of that selected file
+split the selected csv file to different csv files and name it according to the value in the first field of that selected file
 ```
 rjj s
 ```
 #### xplit
-split the selected excel (.xls or .xlsx) into pieces and name it according to the value in the first field of that selected excel file
+split the selected excel (.xls or .xlsx) to pieces and name it according to the value in the first field of that selected excel file
 ```
 rjj x
 ```
