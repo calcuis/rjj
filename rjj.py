@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.0.7"
+__version__="0.0.8"
 
 import argparse, os, json, csv
 import pandas as pd
@@ -176,8 +176,7 @@ def xplit():
         print("No excel files are available in the current directory.")
         input("--- Press ENTER To Exit ---")
 
-def joint(output_file):
-    output = f'{output_file}.xlsx'
+def joint():
     excel_files = [f for f in os.listdir() if f.endswith('.xls') or f.endswith('.xlsx') and f != output]
     dataframes = []
 
@@ -188,13 +187,16 @@ def joint(output_file):
             df['File'] = file_name
             dataframes.append(df)
 
+        output_file = input("Give a name to the output file: ")
+        output = f'{output_file}.xlsx'
+
         combined_df = pd.concat(dataframes, ignore_index=True)
         combined_df = combined_df[['File'] + [col for col in combined_df.columns if col != 'File']]
         combined_df.to_excel(output, index=False)
 
         print(f"Combined excel file saved as {output}")
     else:
-        print(f"No excel files are available in the current directory; the output file {output} was dropped.")
+        print(f"No excel files are available in the current directory.")
         input("--- Press ENTER To Exit ---")
 
 def __init__():
@@ -222,5 +224,4 @@ def __init__():
     elif args.subcommand == 'x':
         xplit()
     elif args.subcommand == 't':
-        output_file = input("Give a name to the output file: ")
-        joint(output_file)
+        joint()
