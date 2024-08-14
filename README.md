@@ -38,8 +38,14 @@ split the selected csv file into different csv files and name it according to th
 ```
 rjj s
 ```
-#### xplitter
+#### xplit
 split the selected excel (.xls or .xlsx) into pieces and name it according to the value in the first field of that selected excel file
 ```
 rjj x
 ```
+#### joint
+joint all excels (.xls and .xlsx) in the current directory together*; all file names will be stored in the first field of the newly created column `File`; when you execute the command you will be asked for assigning a name for the output file
+```
+rjj t
+```
+*tips: this is different from csv jointer, since both .xls and .xlsx is accepted, and the extention will not be taken, it will be merged while two of them share the same file name (cannot be split by the command above); so understand this condition, then make good use of it!
