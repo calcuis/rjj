@@ -48,4 +48,4 @@ joint all excels (.xls and .xlsx) in the current directory together*; all file n
 ```
 rjj t
 ```
-*tips: this is different from csv jointer, since both .xls and .xlsx is accepted, and the extention will not be taken, it will be merged while two of them share the same file name (cannot be split by the command above); so understand this condition, then make good use of it!
+*tips: this is different from csv jointer, since both .xls and .xlsx is accepted, and the file extention will not be taken, it will be merged while two of them share the same file name (cannot be split by the command above); so understand this condition, then make good use of it!
