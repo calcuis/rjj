@@ -39,7 +39,7 @@ split the selected csv file to different csv files and name it according to the 
 rjj s
 ```
 #### xplit
-split the selected excel (.xls or .xlsx) to pieces and name it according to the value in the first field of that selected excel file
+split the selected excel (.xls or .xlsx) to pieces and name it according to the value in the first field of that selected excel
 ```
 rjj x
 ```
