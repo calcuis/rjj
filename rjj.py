@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.0.6"
+__version__="0.0.7"
 
 import argparse, os, json, csv
 import pandas as pd
@@ -94,17 +94,21 @@ def jointer(output_file):
     csv_files = [f for f in os.listdir() if f.endswith('.csv') and f != output]
     dataframes = []
 
-    for file in csv_files:
-        file_name = os.path.splitext(file)[0]
-        df = pd.read_csv(file)
-        df['File'] = file_name
-        dataframes.append(df)
+    if csv_files:
+        for file in csv_files:
+            file_name = os.path.splitext(file)[0]
+            df = pd.read_csv(file)
+            df['File'] = file_name
+            dataframes.append(df)
 
-    combined_df = pd.concat(dataframes, ignore_index=True)
-    combined_df = combined_df[['File'] + [col for col in combined_df.columns if col != 'File']]
-    combined_df.to_csv(output, index=False)
+        combined_df = pd.concat(dataframes, ignore_index=True)
+        combined_df = combined_df[['File'] + [col for col in combined_df.columns if col != 'File']]
+        combined_df.to_csv(output, index=False)
 
-    print(f"Combined CSV file saved as {output}")
+        print(f"Combined CSV file saved as {output}")
+    else:
+        print(f"No CSV files are available in the current directory; the output file {output} was dropped.")
+        input("--- Press ENTER To Exit ---")
 
 def spliter():
     csv_files = [file for file in os.listdir() if file.endswith('.csv')]
@@ -139,7 +143,7 @@ def spliter():
         print("No CSV files are available in the current directory.")
         input("--- Press ENTER To Exit ---")
 
-def xpliter():
+def xplit():
     excel_files = [file for file in os.listdir() if file.endswith('.xls') or file.endswith('.xlsx')]
 
     if excel_files:
@@ -172,16 +176,38 @@ def xpliter():
         print("No excel files are available in the current directory.")
         input("--- Press ENTER To Exit ---")
 
+def joint(output_file):
+    output = f'{output_file}.xlsx'
+    excel_files = [f for f in os.listdir() if f.endswith('.xls') or f.endswith('.xlsx') and f != output]
+    dataframes = []
+
+    if excel_files:
+        for file in excel_files:
+            file_name = os.path.splitext(file)[0]
+            df = pd.read_excel(file)
+            df['File'] = file_name
+            dataframes.append(df)
+
+        combined_df = pd.concat(dataframes, ignore_index=True)
+        combined_df = combined_df[['File'] + [col for col in combined_df.columns if col != 'File']]
+        combined_df.to_excel(output, index=False)
+
+        print(f"Combined excel file saved as {output}")
+    else:
+        print(f"No excel files are available in the current directory; the output file {output} was dropped.")
+        input("--- Press ENTER To Exit ---")
+
 def __init__():
     parser = argparse.ArgumentParser(description="rjj will execute different functions based on command-line arguments")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
 
     subparsers = parser.add_subparsers(title="subcommands", dest="subcommand", help="choose a subcommand:")
     subparsers.add_parser('c', help='convert json to csv')
-    subparsers.add_parser('d', help='detect coexisting record(s)')
+    subparsers.add_parser('d', help='detect co-existing record(s)')
     subparsers.add_parser('j', help='joint all csv(s) together')
-    subparsers.add_parser('s', help='split csv into piece(s)')
-    subparsers.add_parser('x', help='split excel .xls/.xlsx')
+    subparsers.add_parser('s', help='split csv to piece(s)')
+    subparsers.add_parser('t', help='joint all excel(s) into one')
+    subparsers.add_parser('x', help='split excel to piece(s)')
 
     args = parser.parse_args()
     if args.subcommand == 'j':
@@ -191,7 +217,10 @@ def __init__():
         spliter()
     elif args.subcommand == 'd':
         detector()
-    elif args.subcommand == 'x':
-        xpliter()
     elif args.subcommand == 'c':
         convertor()
+    elif args.subcommand == 'x':
+        xplit()
+    elif args.subcommand == 't':
+        output_file = input("Give a name to the output file: ")
+        joint(output_file)
