@@ -17,12 +17,12 @@ rjj -v
 rjj -h
 ```
 #### convertor
-convert json to csv; select a json file in the current directory, then give a name to the output file (don't need the extension)
+convert json to csv; select a json file in the current directory, the converted csv file will be saved with the same name
 ```
 rjj c
 ```
 #### detector
-detect the co-existing record(s) between two csv files; select two csv files to execute the detection process, then assign a name for the output file; co-existing record(s) will be indicated in a newly created column `Coexist`
+detect the co-existing record(s) between two csv files; select two csv files to execute the detection process, then give a name (don't need the extension) for the output file; co-existing record(s) will be indicated in a newly created column `Coexist`
 ```
 rjj d
 ```
@@ -48,4 +48,4 @@ joint all excels (.xls and .xlsx) in the current directory together*; all file n
 ```
 rjj t
 ```
-*tips: this is different from csv jointer, since both .xls and .xlsx is accepted, and the file extention will not be taken, it will be merged while two of them share the same file name (cannot be split by the command above); so understand this condition, then make good use of it!
+**differ from csv jointer, since both .xls and .xlsx is accepted, and the file extention will not be taken, it will be merged while two of them share the same file name (cannot be split by the command above); understand this condition, make good use of it!*
