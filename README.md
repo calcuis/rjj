@@ -17,7 +17,7 @@ rjj -v
 rjj -h
 ```
 #### convertor
-convert json to csv; select a json file in the current directory, the converted csv file will be saved with the same name
+convert json to csv; select a json file in the current directory, choose to enter another file name for output or not (Y/n); if not, the converted csv file will be saved with the same name
 ```
 rjj c
 ```
