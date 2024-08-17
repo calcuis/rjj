@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.0.8"
+__version__="0.1.0"
 
 import argparse, os, json, csv
 import pandas as pd
@@ -18,14 +18,19 @@ def convertor():
         choice_index=int(choice)-1
         selected_file=json_files[choice_index]
         print(f"File: {selected_file} is selected!")
+
+        ask = input("Enter another file name as output (Y/n)? ")
+        if  ask.lower() == 'y':
+                given = input("Give a name to the output file: ")
+                output=f'{given}.csv'
+        else:
+                output=f"{selected_file[:len(selected_file)-5]}.csv"
         
         try:
             with open(selected_file, encoding='utf-8-sig') as json_file:
                 jsondata = json.load(json_file)
-            
-            output = input("Give a name to the output file: ")
 
-            data_file = open(f'{output}.csv', 'w', newline='', encoding='utf-8-sig')
+            data_file = open(output, 'w', newline='', encoding='utf-8-sig')
             csv_writer = csv.writer(data_file)
 
             count = 0
@@ -38,13 +43,12 @@ def convertor():
 
             data_file.close()
 
-            print(f"Converted file saved to {output}.csv")
+            print(f"Converted file saved to {output}")
 
         except (ValueError, IndexError):
             print("Invalid choice. Please enter a valid number.")
     else:
         print("No JSON files are available in the current directory.")
-        input("--- Press ENTER To Exit ---")
 
 def detector():
     csv_files = [file for file in os.listdir() if file.endswith('.csv')]
@@ -87,7 +91,6 @@ def detector():
             print("Invalid choice. Please enter a valid number.")
     else:
         print("No CSV files are available in the current directory.")
-        input("--- Press ENTER To Exit ---")
 
 def jointer(output_file):
     output = f'{output_file}.csv'
@@ -108,7 +111,6 @@ def jointer(output_file):
         print(f"Combined CSV file saved as {output}")
     else:
         print(f"No CSV files are available in the current directory; the output file {output} was dropped.")
-        input("--- Press ENTER To Exit ---")
 
 def spliter():
     csv_files = [file for file in os.listdir() if file.endswith('.csv')]
@@ -141,7 +143,6 @@ def spliter():
             print("Invalid choice. Please enter a valid number.")
     else:
         print("No CSV files are available in the current directory.")
-        input("--- Press ENTER To Exit ---")
 
 def xplit():
     excel_files = [file for file in os.listdir() if file.endswith('.xls') or file.endswith('.xlsx')]
@@ -174,7 +175,6 @@ def xplit():
             print("Invalid choice. Please enter a valid number.")
     else:
         print("No excel files are available in the current directory.")
-        input("--- Press ENTER To Exit ---")
 
 def joint():
     excel_files = [f for f in os.listdir() if f.endswith('.xls') or f.endswith('.xlsx') and f != output]
@@ -197,7 +197,6 @@ def joint():
         print(f"Combined excel file saved as {output}")
     else:
         print(f"No excel files are available in the current directory.")
-        input("--- Press ENTER To Exit ---")
 
 def __init__():
     parser = argparse.ArgumentParser(description="rjj will execute different functions based on command-line arguments")
