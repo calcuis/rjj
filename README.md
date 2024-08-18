@@ -21,6 +21,11 @@ convert json to csv; select a json file in the current directory, choose to ente
 ```
 rjj c
 ```
+#### reversor
+reverse csv back to json; select a csv file in the current directory, choose to enter another file name for output or not (Y/n); if not, the converted json file will be saved with the same name
+```
+rjj r
+```
 #### detector
 detect the co-existing record(s) between two csv files; select two csv files to execute the detection process, then give a name (don't need the extension) for the output file; co-existing record(s) will be indicated in a newly created column `Coexist`
 ```
