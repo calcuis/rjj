@@ -22,7 +22,7 @@ convert json to csv; select a json file in the current directory, choose to ente
 rjj c
 ```
 #### reversor
-reverse csv back to json; select a csv file in the current directory, choose to enter another file name for output or not (Y/n); if not, the converted json file will be saved with the same name
+reverse csv back to json; select a csv file in the current directory, choose to enter another file name for output or not (Y/n); if not, the converted json file will be saved with the same name; support any data type, even emoji
 ```
 rjj r
 ```
