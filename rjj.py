@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.1.0"
+__version__="0.1.1"
 
 import argparse, os, json, csv
 import pandas as pd
@@ -49,6 +49,44 @@ def convertor():
             print("Invalid choice. Please enter a valid number.")
     else:
         print("No JSON files are available in the current directory.")
+
+def reverser():
+    csv_files = [file for file in os.listdir() if file.endswith('.csv')]
+
+    if csv_files:
+        print("CSV file(s) available. Select which one to convert:")
+        
+        for index, file_name in enumerate(csv_files, start=1):
+            print(f"{index}. {file_name}")
+
+        choice = input(f"Enter your choice (1 to {len(csv_files)}): ")
+        choice_index=int(choice)-1
+        selected_file=csv_files[choice_index]
+        print(f"File: {selected_file} is selected!")
+
+        ask = input("Enter another file name as output (Y/n)? ")
+        if  ask.lower() == 'y':
+                given = input("Give a name to the output file: ")
+                output=f'{given}.json'
+        else:
+                output=f"{selected_file[:len(selected_file)-4]}.json"
+        
+        try:
+            data = []
+            with open(selected_file, mode='r', encoding='utf-8') as csv_file:
+                csv_reader = csv.DictReader(csv_file)
+                for row in csv_reader:
+                    data.append(dict(row))
+
+            with open(output, mode='w', encoding='utf-8') as json_file:
+                json.dump(data, json_file, ensure_ascii=False, indent=4)
+
+            print(f"Converted file saved to {output}")
+
+        except (ValueError, IndexError):
+            print("Invalid choice. Please enter a valid number.")
+    else:
+        print("No CSV files are available in the current directory.")
 
 def detector():
     csv_files = [file for file in os.listdir() if file.endswith('.csv')]
@@ -204,6 +242,7 @@ def __init__():
 
     subparsers = parser.add_subparsers(title="subcommands", dest="subcommand", help="choose a subcommand:")
     subparsers.add_parser('c', help='convert json to csv')
+    subparsers.add_parser('r', help='convert csv to json')
     subparsers.add_parser('d', help='detect co-existing record(s)')
     subparsers.add_parser('j', help='joint all csv(s) together')
     subparsers.add_parser('s', help='split csv to piece(s)')
@@ -220,6 +259,8 @@ def __init__():
         detector()
     elif args.subcommand == 'c':
         convertor()
+    elif args.subcommand == 'r':
+        reverser()
     elif args.subcommand == 'x':
         xplit()
     elif args.subcommand == 't':
