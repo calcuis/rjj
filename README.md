@@ -34,12 +34,12 @@ rjj d
 ### jointer and splitter
 joint or split your data file(s)
 #### jointer
-joint all csv files in the current directory together; all file names will be stored in the first field of the newly created column `File`; when you execute the command you will be asked for assigning a name for the output file
+joint all csv files in the current directory together; all file names will be stored in the first field of the newly created column `File`; when you execute the command you will be asked for assigning a name for the output file🖇
 ```
 rjj j
 ```
 #### splitter
-split the selected csv file to different csv files and name it according to the value in the first field of that selected file
+split the selected csv file to different csv files and name it according to the value in the first field of that selected file📑
 ```
 rjj s
 ```
