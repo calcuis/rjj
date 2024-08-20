@@ -1,9 +1,80 @@
 # !/usr/bin/env python3
 
-__version__="0.1.4"
+__version__="0.1.5"
 
 import argparse, os, json, csv, glob
 import pandas as pd
+
+def matcher():
+    result = []
+    ask = input("Enter another name instead of output (Y/n)? ")
+    if  ask.lower() == 'y':
+        given = input("Give a name to the output file: ")
+        output=f'{given}.csv'
+    else:
+        output='output.csv'
+
+    for root, dirs, files in os.walk('.'):
+        for file in files:
+            if file.endswith('.csv') and file != output:
+                file_path = os.path.join(root, file)
+
+                try:
+                    df = pd.read_csv(file_path)
+                except Exception as e:
+                    print(f"Could not read {file_path}: {e}")
+                    continue
+                
+                df.dropna(inplace=True)
+                df['Source_file'] = file
+                result.append(df)
+
+    if result:
+        combined_df = pd.concat(result)
+        cols_to_check = combined_df.columns.difference(['Source_file'])
+        duplicates = combined_df.duplicated(subset=cols_to_check, keep=False)
+        repeated_df = combined_df[duplicates]
+        repeated_df.to_csv(output, index=False)
+    else:
+        print("No CSV files found or no data to process.")
+
+    print(f"Resutls saved to '{output}'")
+
+def uniquer():
+    result = []
+    ask = input("Enter another name instead of output (Y/n)? ")
+    if  ask.lower() == 'y':
+        given = input("Give a name to the output file: ")
+        output=f'{given}.csv'
+    else:
+        output='output.csv'
+
+    for root, dirs, files in os.walk('.'):
+        for file in files:
+            if file.endswith('.csv') and file != output:
+                file_path = os.path.join(root, file)
+
+                try:
+                    df = pd.read_csv(file_path)
+                except Exception as e:
+                    print(f"Could not read {file_path}: {e}")
+                    continue
+
+                df.dropna(inplace=True)
+                df['Source_file'] = file
+                result.append(df)
+
+    if result:
+        combined_df = pd.concat(result)
+        cols_to_check = combined_df.columns.difference(['Source_file'])
+        duplicates = combined_df.duplicated(subset=cols_to_check, keep=False)
+        unique_df = combined_df[~duplicates]
+        unique_df.to_csv(output, index=False)
+    else:
+        print("No CSV files found or no data to process.")
+
+    print(f"Resutls saved to '{output}'")
+
 
 def filter():
     keyword = input("Please provide a search keyword to perform this mass filter: ")
@@ -315,6 +386,8 @@ def __init__():
     subparsers.add_parser('c', help='convert json to csv')
     subparsers.add_parser('r', help='convert csv to json')
     subparsers.add_parser('f', help='keyword filter for csv data')
+    subparsers.add_parser('m', help='identify matched record(s)')
+    subparsers.add_parser('u', help='identify unique record(s)')
     subparsers.add_parser('d', help='detect co-existing record(s)')
     subparsers.add_parser('j', help='joint all csv(s) together')
     subparsers.add_parser('s', help='split csv to piece(s)')
@@ -342,3 +415,7 @@ def __init__():
         xplit()
     elif args.subcommand == 't':
         joint()
+    elif args.subcommand == 'm':
+        matcher()
+    elif args.subcommand == 'u':
+        uniquer()
