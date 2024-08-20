@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.1.4-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.1.5-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -26,6 +26,18 @@ reverse csv back to json; select a csv file in the current directory, choose to 
 ```
 rjj r
 ```
+#### matcher
+identify matched/repeated record(s) in the current directory and extend to its sub-directories; powerful massive record matching tool🔍
+```
+rjj m
+```
+*provide a name to the output file (if not, the output file will be named as output.csv); source file (location) will be indicated in a newly created column `Source_file`*
+#### uniquer
+identify unique/non-repeated record(s)🔍 in the current directory and extend to its sub-directories; powerful massive record uniqueness identifier
+```
+rjj u
+```
+*give a name to the output file; source location will be indicated in a newly created column `Source_file`*
 #### filter
 locate the input `Keyword` among all csv files in the current directory👁‍🗨 (and could opt to expand to its all sub-folder files; cool right?)🔍
 ```
