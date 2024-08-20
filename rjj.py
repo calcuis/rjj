@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.1.5"
+__version__="0.1.6"
 
 import argparse, os, json, csv, glob
 import pandas as pd
@@ -13,22 +13,19 @@ def matcher():
         output=f'{given}.csv'
     else:
         output='output.csv'
-
+    print("Processing...")
     for root, dirs, files in os.walk('.'):
         for file in files:
             if file.endswith('.csv') and file != output:
                 file_path = os.path.join(root, file)
-
                 try:
                     df = pd.read_csv(file_path)
                 except Exception as e:
                     print(f"Could not read {file_path}: {e}")
                     continue
-                
                 df.dropna(inplace=True)
                 df['Source_file'] = file
                 result.append(df)
-
     if result:
         combined_df = pd.concat(result)
         cols_to_check = combined_df.columns.difference(['Source_file'])
@@ -37,7 +34,6 @@ def matcher():
         repeated_df.to_csv(output, index=False)
     else:
         print("No CSV files found or no data to process.")
-
     print(f"Resutls saved to '{output}'")
 
 def uniquer():
@@ -48,22 +44,19 @@ def uniquer():
         output=f'{given}.csv'
     else:
         output='output.csv'
-
+    print("Processing...")
     for root, dirs, files in os.walk('.'):
         for file in files:
             if file.endswith('.csv') and file != output:
                 file_path = os.path.join(root, file)
-
                 try:
                     df = pd.read_csv(file_path)
                 except Exception as e:
                     print(f"Could not read {file_path}: {e}")
                     continue
-
                 df.dropna(inplace=True)
                 df['Source_file'] = file
                 result.append(df)
-
     if result:
         combined_df = pd.concat(result)
         cols_to_check = combined_df.columns.difference(['Source_file'])
@@ -72,9 +65,83 @@ def uniquer():
         unique_df.to_csv(output, index=False)
     else:
         print("No CSV files found or no data to process.")
-
     print(f"Resutls saved to '{output}'")
 
+def xmatch():
+    result = []
+    ask = input("Enter another name instead of output (Y/n)? ")
+    if  ask.lower() == 'y':
+        given = input("Give a name to the output file: ")
+        output=f'{given}.xlsx'
+    else:
+        output='output.xlsx'
+    print("Processing...")
+    for root, dirs, files in os.walk('.'):
+        for file in files:
+            if file.endswith(('.xls', '.xlsx')) and file != output:
+                file_path = os.path.join(root, file)
+                try:
+                    xls = pd.ExcelFile(file_path)
+                except Exception as e:
+                    print(f"Could not read {file_path}: {e}")
+                    continue
+                for sheet_name in xls.sheet_names:
+                    try:
+                        df = pd.read_excel(file_path, sheet_name=sheet_name)
+                    except Exception as e:
+                        print(f"Could not read sheet {sheet_name} in {file_path}: {e}")
+                        continue
+                    df.dropna(inplace=True)
+                    df['Source_file'] = file
+                    df['Sheet_name'] = sheet_name
+                    result.append(df)
+    if result:
+        combined_df = pd.concat(result)
+        cols_to_check = combined_df.columns.difference(['Source_file', 'Sheet_name'])
+        duplicates = combined_df.duplicated(subset=cols_to_check, keep=False)
+        repeated_df = combined_df[duplicates]
+        repeated_df.to_excel(output, index=False)
+    else:
+        print("No Excel files found or no data to process.")
+    print(f"Resutls saved to '{output}'")
+
+def uniquex():
+    result = []
+    ask = input("Enter another name instead of output (Y/n)? ")
+    if  ask.lower() == 'y':
+        given = input("Give a name to the output file: ")
+        output=f'{given}.xlsx'
+    else:
+        output='output.xlsx'
+    print("Processing...")
+    for root, dirs, files in os.walk('.'):
+        for file in files:
+            if file.endswith(('.xls', '.xlsx')) and file != output:
+                file_path = os.path.join(root, file)
+                try:
+                    xls = pd.ExcelFile(file_path)
+                except Exception as e:
+                    print(f"Could not read {file_path}: {e}")
+                    continue
+                for sheet_name in xls.sheet_names:
+                    try:
+                        df = pd.read_excel(file_path, sheet_name=sheet_name)
+                    except Exception as e:
+                        print(f"Could not read sheet {sheet_name} in {file_path}: {e}")
+                        continue
+                    df.dropna(inplace=True)
+                    df['Source_file'] = file
+                    df['Sheet_name'] = sheet_name
+                    result.append(df)
+    if result:
+        combined_df = pd.concat(result)
+        cols_to_check = combined_df.columns.difference(['Source_file', 'Sheet_name'])
+        duplicates = combined_df.duplicated(subset=cols_to_check, keep=False)
+        unique_df = combined_df[~duplicates]
+        unique_df.to_excel(output, index=False)
+    else:
+        print("No Excel files found or no data to process.")
+    print(f"Resutls saved to '{output}'")
 
 def filter():
     keyword = input("Please provide a search keyword to perform this mass filter: ")
@@ -89,7 +156,7 @@ def filter():
 
     ask = input("Scan sub-folder(s) as well (Y/n)? ")
     if  ask.lower() == 'y':
-        csv_files = [file for file in glob.glob('**/*.csv', recursive=True) if os.path.basename(file) != output]
+        csv_files = [file for file in glob.glob('**/*.csv', recursive=True) if os.path.basename(file) and file != output]
     else:
         csv_files = [file for file in glob.glob('*.csv') if file != output]
 
@@ -123,7 +190,7 @@ def kilter():
 
     ask = input("Scan sub-folder(s) as well (Y/n)? ")
     if  ask.lower() == 'y':
-        excel_files = [file for file in glob.glob('**/*.xls*', recursive=True) if os.path.basename(file) != output]
+        excel_files = [file for file in glob.glob('**/*.xls*', recursive=True) if os.path.basename(file) and file != output]
     else:
         excel_files = [file for file in glob.glob('**/*.xls*') if file != output]
 
@@ -385,15 +452,17 @@ def __init__():
     subparsers = parser.add_subparsers(title="subcommands", dest="subcommand", help="choose a subcommand:")
     subparsers.add_parser('c', help='convert json to csv')
     subparsers.add_parser('r', help='convert csv to json')
-    subparsers.add_parser('f', help='keyword filter for csv data')
     subparsers.add_parser('m', help='identify matched record(s)')
     subparsers.add_parser('u', help='identify unique record(s)')
     subparsers.add_parser('d', help='detect co-existing record(s)')
     subparsers.add_parser('j', help='joint all csv(s) together')
     subparsers.add_parser('s', help='split csv to piece(s)')
+    subparsers.add_parser('f', help='filter data by keyword')
+    subparsers.add_parser('k', help='filter data by keyword for excel')
+    subparsers.add_parser('h', help='identify matched record(s) for excel')
+    subparsers.add_parser('q', help='identify unique record(s) for excel')
     subparsers.add_parser('t', help='joint all excel(s) into one')
     subparsers.add_parser('x', help='split excel to piece(s)')
-    subparsers.add_parser('k', help='keyword filter for excel data')
 
     args = parser.parse_args()
     if args.subcommand == 'j':
@@ -403,14 +472,14 @@ def __init__():
         spliter()
     elif args.subcommand == 'f':
         filter()
-    elif args.subcommand == 'k':
-        kilter()
     elif args.subcommand == 'd':
         detector()
     elif args.subcommand == 'c':
         convertor()
     elif args.subcommand == 'r':
         reverser()
+    elif args.subcommand == 'k':
+        kilter()
     elif args.subcommand == 'x':
         xplit()
     elif args.subcommand == 't':
@@ -419,3 +488,7 @@ def __init__():
         matcher()
     elif args.subcommand == 'u':
         uniquer()
+    elif args.subcommand == 'h':
+        xmatch()
+    elif args.subcommand == 'q':
+        uniquex()
