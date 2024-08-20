@@ -31,7 +31,7 @@ locate the input `Keyword` among all csv files in the current directory👁‍�
 ```
 rjj f
 ```
-while executing the command above, give your searching keyword first, provide a name for the output file (if not, the output file will be named as output.csv), then opt to apply to all sub-folder(s) or just the csv file(s) in the current directory (Y/n); source file (location info) will be indicated in a newly created first column `Source_file`; the exact coordinate (x,y) will be given in the newly created second and third columns, named `Column_y` and `Row_x`; and the full record will be pasted behind for simplifying your auditing work📑
+*while executing the command above, give your searching keyword first, provide a name for the output file (if not, the output file will be named as output.csv), then opt to apply to all sub-folder(s) or just the csv file(s) in the current directory (Y/n); source file (location info) will be indicated in a newly created first column `Source_file`; the exact coordinate (x,y) will be given in the newly created second and third columns, named `Column_y` and `Row_x`; and the full record will be pasted behind for simplifying your auditing work📑*
 #### detector
 detect the co-existing record(s) between two csv files🔍; select two csv files to execute the detection process, then give a name for the output file; co-existing record(s) will be indicated in a newly created column `Coexist`
 ```
@@ -61,7 +61,8 @@ rjj t
 ```
 **differ from csv jointer, since both .xls and .xlsx is accepted, and the file extention will not be taken, it will be merged while two of them share the same file name (cannot be split by the command above); understand this condition, make good use of it!*
 #### kilter
-locate the input `Keyword` among all excel files (.xls and .xlsx) in the current directory (and could expand to its sub-folders)👁‍🗨; give your searching `Keyword` first (extremely important🔑), opt to apply to all sub-folder(s) or just the excel(s) in the current directory (Y/n), then give a name for the output file (if not, the output file will be named as output.xlsx); source file (location info) will be indicated in a newly created first column `Source_file`; since each excel file is possible to contain more than one sheet📄, the sheet number will be stored in the newly created second column `Sheet_z`, then the exact coordinate (x,y) will be given after it, in the third and fourth columns, named `Column_y` and `Row_x`; and the full data record will be pasted behind as well; super kooooo🍻
+locate the input `Keyword` among all excel files (.xls and .xlsx) in the current directory (and could expand to its sub-folders)👁‍🗨; give your searching `Keyword` first (extremely important🔑), opt to apply to all sub-folder(s) or just the excel(s) in the current directory (Y/n), then give a name for the output file (if not, the output file will be named as output.xlsx); source file (location info) will be indicated in a newly created first column `Source_file`
 ```
 rjj k
 ```
+*since each excel file is possible to contain more than one sheet📄, the sheet number will be stored in the newly created second column `Sheet_z`, then the exact coordinate (x,y) will be given after it, in the third and fourth columns, named `Column_y` and `Row_x`; and the full data record will be pasted behind as well; super kooooo🍻*
