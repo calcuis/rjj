@@ -39,7 +39,7 @@ locate the input `Keyword` among all csv files in the current directory👁‍�
 ```
 rjj f
 ```
-*while executing the command above, give your searching keyword first, provide a name for the output file (if not, the output file will be named as output.csv), then opt to apply to all sub-folder(s) or just the csv file(s) in the current directory (Y/n); source file (location info) will be indicated in a newly created first column `Source_file`; the exact coordinate (x,y) will be given in the newly created second and third columns, named `Column_y` and `Row_x`; and the full record will be pasted behind for simplifying your auditing work* 📑
+*source file (location info) will be indicated in a newly created first column `Source_file`; the exact coordinate (x,y) will be given in the newly created second and third columns, namely `Column_y` and `Row_x`; and the full record will be pasted behind for simplifying your auditing work* 📑
 #### matcher
 identify matched/repeated record(s)📃📃🔍 among all csv in the current directory and extend to its sub-directories📁
 ```
