@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.1.7"
+__version__="0.1.8"
 
 import argparse, os, json, csv, glob
 import pandas as pd
@@ -233,7 +233,7 @@ def convertor():
                     count += 1
                 csv_writer.writerow(data.values())
             data_file.close()
-            print(f"Converted file saved to {output}")
+            print(f"Converted file saved to '{output}'")
         except (ValueError, IndexError):
             print("Invalid choice. Please enter a valid number.")
     else:
@@ -263,7 +263,7 @@ def reverser():
                     data.append(dict(row))
             with open(output, mode='w', encoding='utf-8') as json_file:
                 json.dump(data, json_file, ensure_ascii=False, indent=4)
-            print(f"Converted file saved to {output}")
+            print(f"Converted file saved to '{output}'")
         except (ValueError, IndexError):
             print("Invalid choice. Please enter a valid number.")
     else:
@@ -293,7 +293,7 @@ def detector():
             merged['Coexist'] = merged['_merge'].apply(lambda x: 1 if x == 'both' else '')
             merged = merged.drop(columns=['_merge'])
             merged.to_csv(f'{output}.csv', index=False)
-            print(f"Results of coexist-record detection saved to {output}.csv")
+            print(f"Results of coexist-record detection saved to '{output}.csv'")
         except (ValueError, IndexError):
             print("Invalid choice. Please enter a valid number.")
     else:
@@ -312,7 +312,7 @@ def jointer(output_file):
         combined_df = pd.concat(dataframes, ignore_index=True)
         combined_df = combined_df[['File'] + [col for col in combined_df.columns if col != 'File']]
         combined_df.to_csv(output, index=False)
-        print(f"Combined CSV file saved as {output}")
+        print(f"Combined CSV file saved as '{output}'")
     else:
         print(f"No CSV files are available in the current directory; the output file {output} was dropped.")
 
@@ -378,7 +378,7 @@ def joint():
         combined_df = pd.concat(dataframes, ignore_index=True)
         combined_df = combined_df[['File'] + [col for col in combined_df.columns if col != 'File']]
         combined_df.to_excel(output, index=False)
-        print(f"Combined excel file saved as {output}")
+        print(f"Combined excel file saved as '{output}'")
     else:
         print(f"No excel files are available in the current directory.")
 
