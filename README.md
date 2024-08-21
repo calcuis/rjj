@@ -29,7 +29,7 @@ rjj r
 ```
 *select a csv file in the current directory, choose to enter another file name for output or not (Y/n); if not, the converted json file will be saved with the same name; 🌀support any data type, even emoji*🐷
 #### detector
-detect the co-existing record(s) between two csv files🔍
+detect the co-existing record(s) between two csv files📃🔍📃
 ```
 rjj d
 ```
