@@ -1,9 +1,54 @@
 # !/usr/bin/env python3
 
-__version__="0.1.8"
+__version__="0.1.9"
 
-import argparse, os, json, csv, glob
+import argparse, os, json, csv, glob, hashlib
+from collections import defaultdict
+from datetime import datetime
 import pandas as pd
+
+def calculate_hash(file_path):
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()
+
+def get_file_info(file_path):
+    file_hash = calculate_hash(file_path)
+    file_size_kb = os.path.getsize(file_path) / 1024
+    date_modified = datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d %H:%M:%S')
+    return file_hash, date_modified, file_size_kb
+
+def get_files_and_hashes(base_directory):
+    files_info = []
+    total_size_kb = 0
+    hash_counts = defaultdict(int)
+    for root, _, files in os.walk(base_directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            file_hash, date_modified, file_size_kb = get_file_info(file_path)
+            relative_path = os.path.relpath(file_path, base_directory)
+            files_info.append((relative_path, file_hash, date_modified, file_size_kb))
+            total_size_kb += file_size_kb
+            hash_counts[file_hash] += 1
+    total_size_mb = total_size_kb / 1024
+    no_of_files = len(files_info)
+    no_of_unique_files = len(hash_counts)
+    no_of_duplicate_files = no_of_files - no_of_unique_files
+    return files_info, total_size_mb, no_of_files, no_of_unique_files, no_of_duplicate_files
+
+def save_file_info_to_csv(data, output_file):
+    with open(output_file, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Source", "Hash", "Date_modified", "Size_KB"])
+        writer.writerows(data)
+
+def save_file_report_to_csv(report_file, total_size_mb, no_of_files, no_of_unique_files, no_of_duplicate_files):
+    with open(report_file, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Total_size_MB", "No_of_file", "No_of_duplicate_file", "No_of_unique_file"])
+        writer.writerow([total_size_mb, no_of_files, no_of_duplicate_files, no_of_unique_files])
 
 def matcher():
     result = []
@@ -386,6 +431,7 @@ def __init__():
     parser = argparse.ArgumentParser(description="rjj will execute different functions based on command-line arguments")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
     subparsers = parser.add_subparsers(title="subcommands", dest="subcommand", help="choose a subcommand:")
+    subparsers.add_parser('a', help='run file anlaysis')
     subparsers.add_parser('c', help='convert json to csv')
     subparsers.add_parser('r', help='convert csv to json')
     subparsers.add_parser('m', help='identify matched record(s)')
@@ -400,6 +446,25 @@ def __init__():
     subparsers.add_parser('t', help='joint all excel(s) into one')
     subparsers.add_parser('x', help='split excel to piece(s)')
     args = parser.parse_args()
+    if args.subcommand == 'a':
+        base_directory = os.getcwd()
+        ask = input("Enter another name instead of analysis_statistics (Y/n)? ")
+        if  ask.lower() == 'y':
+            given = input("Give a name to the statistic file: ")
+            output_file=f'{given}.csv'
+        else:
+            output_file='analysis_statistics.csv'
+        files_info, total_size_mb, no_of_files, no_of_unique_files, no_of_duplicate_files = get_files_and_hashes(base_directory)
+        save_file_info_to_csv(files_info, output_file)
+        print(f"File statistics have been saved to '{output_file}'.")
+        ask = input("Enter another name instead of analysis_results (Y/n)? ")
+        if  ask.lower() == 'y':
+            given = input("Give a name to the result file: ")
+            report_file=f'{given}.csv'
+        else:
+            report_file='analysis_results.csv'
+        save_file_report_to_csv(report_file, total_size_mb, no_of_files, no_of_unique_files, no_of_duplicate_files)
+        print(f"Results of the File Analysis have been saved to '{report_file}'.")
     if args.subcommand == 'j':
         output_file = input("Give a name to the output file: ")
         jointer(output_file)
