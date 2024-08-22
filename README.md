@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.1.8-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.1.9-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -16,6 +16,12 @@ rjj -v
 ```
 rjj -h
 ```
+#### analyzor
+run file analysis
+```
+rjj a
+```
+*return file statistics and a summary report; include sha256 hash, size, duplicate and uniqueness count, etc.*
 #### convertor
 convert json to csv
 ```
@@ -76,12 +82,6 @@ joint all excels (.xls and .xlsx) in the current directory together; all file na
 rjj t
 ```
 *differ from csv jointer, since both .xls and .xlsx is accepted, and the file extention will not be taken, it will be merged while two of them share the same file name (cannot be split by the command above); understand this condition, make good use of it!* 🙌
-#### kilter
-locate the input `Keyword` among all excel files (.xls and .xlsx) in the current directory (and could expand to its sub-folders)👁‍🗨
-```
-rjj k
-```
-*this feature is similar to the csv filter; but since each excel file is possible to contain more than one sheet📄, the sheet number will be stored in the newly created column `Sheet_z`, then the exact coordinate (x,y) will be given after it, namely `Column_y` and `Row_x`; and the full data record will be pasted behind as well; super kooooo* 🍻
 #### xmatch
 identify matched/repeated record(s)🔍 in the current directory and extend to its sub-directories; for excel
 ```
@@ -94,3 +94,9 @@ identify unique/non-repeated record(s)🔍 in the current directory and extend t
 rjj q
 ```
 *source will be indicated in a newly created column `Source_file`; exact sheet will be told in `Sheet_name`*
+#### kilter
+locate the input `Keyword` among all excel files (.xls and .xlsx) in the current directory (and could expand to its sub-folders)👁‍🗨
+```
+rjj k
+```
+*this feature is similar to the csv filter; but since each excel file is possible to contain more than one sheet📄, the sheet number will be stored in the newly created column `Sheet_z`, then the exact coordinate (x,y) will be given after it, namely `Column_y` and `Row_x`; and the full data record will be pasted behind as well; super kooooo* 🍻
