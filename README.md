@@ -77,6 +77,8 @@ split the selected csv file to different csv files and name it according to the 
 ```
 rjj s
 ```
+### extension for excel
+extended function/module(s) for handling excel file(s)
 #### xplit
 split the selected excel (.xls or .xlsx) to pieces and name it according to the value in the first field of that selected excel
 ```
