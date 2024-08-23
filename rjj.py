@@ -1,11 +1,24 @@
 # !/usr/bin/env python3
 
-__version__="0.1.9"
+__version__="0.2.0"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
 from datetime import datetime
 import pandas as pd
+
+def binder():
+    ask = input("Give a name to the output file (Y/n)? ")
+    if  ask.lower() == 'y':
+        given = input("Enter a name to the output file: ")
+        output=f'{given}.csv'
+    else:
+        output='output.csv'
+    csv_files = [file for file in os.listdir() if file.endswith('.csv') and file != output]
+    dataframes = [pd.read_csv(file) for file in csv_files]
+    combined_df = pd.concat(dataframes, axis=1)
+    combined_df.to_csv(output, index=False)
+    print(f"CSV files combined (by columns) and saved to '{output}'")
 
 def calculate_hash(file_path):
     sha256_hash = hashlib.sha256()
@@ -437,6 +450,7 @@ def __init__():
     subparsers.add_parser('m', help='identify matched record(s)')
     subparsers.add_parser('u', help='identify unique record(s)')
     subparsers.add_parser('d', help='detect co-existing record(s)')
+    subparsers.add_parser('b', help='bind all csv(s) by column(s)')
     subparsers.add_parser('j', help='joint all csv(s) together')
     subparsers.add_parser('s', help='split csv to piece(s)')
     subparsers.add_parser('f', help='filter data by keyword')
@@ -466,10 +480,17 @@ def __init__():
         save_file_report_to_csv(report_file, total_size_mb, no_of_files, no_of_unique_files, no_of_duplicate_files)
         print(f"Results of the File Analysis have been saved to '{report_file}'.")
     if args.subcommand == 'j':
-        output_file = input("Give a name to the output file: ")
-        jointer(output_file)
+        ask = input("Give a name to the output file (Y/n)? ")
+        if  ask.lower() == 'y':
+            given = input("Enter a name to the output file: ")
+            output=f'{given}.csv'
+        else:
+            output='output.csv'
+        jointer(output)
     elif args.subcommand == 's':
         spliter()
+    elif args.subcommand == 'b':
+        binder()
     elif args.subcommand == 'f':
         filter()
     elif args.subcommand == 'd':
