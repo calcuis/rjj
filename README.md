@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.1.9-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.2.0-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -58,6 +58,12 @@ identify unique/non-repeated record(s)🔍📃 among all csv in the current dire
 rjj u
 ```
 *give a name to the output file; source location will be indicated in a newly created column `Source_file`*
+#### binder
+bind all csv files together by columns in the current directory
+```
+rjj b
+```
+*binder is different from jointer below; it can be considered as a horizontal merge whereas jointer is for vertical merge (basically by rows)*
 ### jointer and splitter
 joint or split your data file(s)
 #### jointer
