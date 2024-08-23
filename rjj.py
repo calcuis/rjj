@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.2.0"
+__version__="0.2.1"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -482,10 +482,9 @@ def __init__():
     if args.subcommand == 'j':
         ask = input("Give a name to the output file (Y/n)? ")
         if  ask.lower() == 'y':
-            given = input("Enter a name to the output file: ")
-            output=f'{given}.csv'
+            output = input("Enter a name to the output file: ")
         else:
-            output='output.csv'
+            output='output'
         jointer(output)
     elif args.subcommand == 's':
         spliter()
