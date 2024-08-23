@@ -107,4 +107,4 @@ locate the input `Keyword` among all excel files (.xls and .xlsx) in the current
 ```
 rjj k
 ```
-*this feature is similar to the csv filter; but since each excel file is possible to contain more than one sheet📄, the sheet number will be stored in the newly created column `Sheet_z`, then the exact coordinate (x,y) will be given after it, namely `Column_y` and `Row_x`; and the full data record will be pasted behind as well; super kooooo* 🍻
+*this feature is similar to the csv filter; but since each excel file is possible to contain more than one sheet📄, the sheet number will be stored in the newly created column `Sheet_z`, then the exact coordinate (x,y) will be given after it, namely `Column_y` and `Row_x`; and the full record will be pasted behind as well; super kooooo* 🍻
