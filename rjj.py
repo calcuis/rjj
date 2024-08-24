@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.2.1"
+__version__="0.2.2"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -468,6 +468,7 @@ def __init__():
             output_file=f'{given}.csv'
         else:
             output_file='analysis_statistics.csv'
+        print("Processing...")
         files_info, total_size_mb, no_of_files, no_of_unique_files, no_of_duplicate_files = get_files_and_hashes(base_directory)
         save_file_info_to_csv(files_info, output_file)
         print(f"File statistics have been saved to '{output_file}'.")
@@ -479,7 +480,7 @@ def __init__():
             report_file='analysis_results.csv'
         save_file_report_to_csv(report_file, total_size_mb, no_of_files, no_of_unique_files, no_of_duplicate_files)
         print(f"Results of the File Analysis have been saved to '{report_file}'.")
-    if args.subcommand == 'j':
+    elif args.subcommand == 'j':
         ask = input("Give a name to the output file (Y/n)? ")
         if  ask.lower() == 'y':
             output = input("Enter a name to the output file: ")
