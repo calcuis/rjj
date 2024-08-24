@@ -17,7 +17,7 @@ rjj -v
 rjj -h
 ```
 #### analyzor
-run file analysis
+run file analysis (processing time depends on file size)
 ```
 rjj a
 ```
