@@ -143,6 +143,7 @@ rjj oa
 
 ### plot a graph 📈
 draw a scatter plot; awesome! 🙌
+#### plotter
 ```
 rjj p
 ```
