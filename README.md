@@ -123,6 +123,7 @@ rjj ot
 ```
 rjj it
 ```
+*select first column as data of group 1; second column as data of group 2*
 #### paired-sample t-test
 ```
 rjj pt
@@ -132,4 +133,4 @@ rjj pt
 ```
 rjj oa
 ```
-*select first column as group variable; then second column as data*
+*select first column as group variable; second column as data*
