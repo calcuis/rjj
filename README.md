@@ -112,24 +112,29 @@ rjj k
 ### statistical analysis
 simple statistical analysis is now available to perform on rjj 🍻
 #### one-sample z-test
+compare group with norm (population mean and standard deviation known)
 ```
 rjj oz
 ```
 #### one-sample t-test
+compare group with norm (population mean known)
 ```
 rjj ot
 ```
 #### independent-sample t-test
+compare two independent groups; able to opt to calculate it based on equal variance assumed or not assumed
 ```
 rjj it
 ```
 *select first column as data of group 1; second column as data of group 2*
 #### paired-sample t-test
+compare group across time/paired-feature
 ```
 rjj pt
 ```
 *select first column as pre-test data; second column as post-test data*
 #### one-way anova
+compare two or more groups
 ```
 rjj oa
 ```
