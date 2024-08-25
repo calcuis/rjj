@@ -22,29 +22,7 @@ run file analysis (process time depends on file size)
 rjj a
 ```
 *return file statistics and a summary report; include sha256 hash, size, duplicate and uniqueness count, etc.*
-### statistical analysis session
-simple statistical analysis is now available to perform on rjj 🍻
-#### one-sample z-test
-```
-rjj oz
-```
-#### one-sample t-test
-```
-rjj ot
-```
-#### independent-sample t-test
-```
-rjj it
-```
-#### paired-sample t-test
-```
-rjj pt
-```
-#### one-way anova
-```
-rjj oa
-```
-### data transforming session
+### data transformer
 #### convertor
 convert json to csv
 ```
@@ -131,3 +109,25 @@ locate the input `Keyword` among all excel files (.xls and .xlsx) in the current
 rjj k
 ```
 *this feature is similar to the csv filter; but since each excel file is possible to contain more than one sheet📄, the sheet number will be stored in the newly created column `Sheet_z`, then the exact coordinate (x,y) will be given after it, namely `Column_y` and `Row_x`; and the full record will be pasted behind as well; super kooooo* 🍻
+### statistical analysis
+simple statistical analysis is now available to perform on rjj 🍻
+#### one-sample z-test
+```
+rjj oz
+```
+#### one-sample t-test
+```
+rjj ot
+```
+#### independent-sample t-test
+```
+rjj it
+```
+#### paired-sample t-test
+```
+rjj pt
+```
+#### one-way anova
+```
+rjj oa
+```
