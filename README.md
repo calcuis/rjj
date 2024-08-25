@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.2.5-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.2.6-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -146,7 +146,12 @@ compare two or more groups
 rjj oa
 ```
 *select first column as group variable; second column as data*
-
+#### correlation analysis
+calculate Pearson correlation coefficient (r)
+```
+rjj ca
+```
+*explore the relationship between two variables*
 ### plot a graph 📈
 draw a scatter plot; awesome! 🙌
 #### plotter
