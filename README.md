@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.2.3-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.2.4-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -110,7 +110,7 @@ locate the input `Keyword` among all excel files (.xls and .xlsx) in the current
 rjj k
 ```
 *this feature is similar to the csv filter; but since each excel file is possible to contain more than one sheet📄, the sheet number will be stored in the newly created column `Sheet_z`, then the exact coordinate (x,y) will be given after it, namely `Column_y` and `Row_x`; and the full record will be pasted behind as well; super kooooo* 🍻
-### statistical analysis
+### statistical analysis 🧮
 simple statistical analysis is now available to perform on rjj 🍻
 #### one-sample z-test
 compare group with norm (population mean and standard deviation known)
@@ -140,3 +140,10 @@ compare two or more groups
 rjj oa
 ```
 *select first column as group variable; second column as data*
+
+### plot a graph 📈
+draw a scatter plot; awesome! 🙌
+```
+rjj p
+```
+*select first column as data for x-axis; second column as data for y-axis*
