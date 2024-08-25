@@ -1,11 +1,148 @@
 # !/usr/bin/env python3
 
-__version__="0.2.2"
+__version__="0.2.3"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
 from datetime import datetime
 import pandas as pd
+import numpy as np
+from scipy import stats
+from scipy.stats import norm
+
+def list_csv_files():
+    return [f for f in os.listdir() if f.endswith('.csv')]
+
+def select_csv_file(csv_files):
+    print("Available CSV files:")
+    for i, file in enumerate(csv_files):
+        print(f"{i + 1}: {file}")
+    file_index = int(input("Select a CSV file by number: ")) - 1
+    return csv_files[file_index]
+
+def select_column(df):
+    print("Available columns:")
+    for i, col in enumerate(df.columns):
+        print(f"{i + 1}: {col}")
+    col_index = int(input("Select a column by number: ")) - 1
+    return df.columns[col_index]
+
+def select_columns(df):
+    print("Available columns:")
+    for i, col in enumerate(df.columns):
+        print(f"{i + 1}: {col}")
+    col_index1 = int(input("Select the first column by number: ")) - 1
+    col_index2 = int(input("Select the second column by number: ")) - 1
+    return df.columns[col_index1], df.columns[col_index2]
+
+def one_sample_z_test(sample_data, population_mean, population_std):
+    sample_mean = np.mean(sample_data)
+    sample_size = len(sample_data)
+    standard_error = population_std / np.sqrt(sample_size)
+    z_score = (sample_mean - population_mean) / standard_error
+    p_value = 2 * (1 - norm.cdf(abs(z_score)))
+    return z_score, p_value
+
+def one_sample_t_test(sample_data, population_mean):
+    t_statistic, p_value = stats.ttest_1samp(sample_data, population_mean)
+    return t_statistic, p_value
+
+def independent_sample_t_test(sample1, sample2):
+    ask = input("Equal variance assumed (Y/n)? ")
+    if ask.lower() == "y":
+        t_statistic, p_value = stats.ttest_ind(sample1, sample2)
+    else:
+        t_statistic, p_value = stats.ttest_ind(sample1, sample2, equal_var=False)
+    return t_statistic, p_value
+
+def paired_sample_t_test(sample1, sample2):
+    t_statistic, p_value = stats.ttest_rel(sample1, sample2)
+    return t_statistic, p_value
+
+def one_way_anova(df, group_column, data_column):
+    groups = df.groupby(group_column)[data_column].apply(list)
+    F_statistic, p_value = stats.f_oneway(*groups)
+    return F_statistic, p_value
+
+def one_sample_z():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    selected_column = select_column(df)
+    sample_data = df[selected_column].dropna()
+    population_mean = float(input("Enter the population mean: "))
+    population_std = float(input("Enter the population standard deviation: "))
+    z_score, p_value = one_sample_z_test(sample_data, population_mean, population_std)
+    print(f"\nResults of the one-sample Z-test:")
+    print(f"Z-score: {z_score}")
+    print(f"P-value: {p_value}")
+
+def one_sample_t():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    selected_column = select_column(df)
+    sample_data = df[selected_column].dropna()
+    population_mean = float(input("Enter the population mean: "))
+    t_statistic, p_value = one_sample_t_test(sample_data, population_mean)
+    print(f"\nResults of the one-sample t-test:")
+    print(f"T-statistic: {t_statistic}")
+    print(f"P-value: {p_value}")
+
+def independ_sample_t():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    col1, col2 = select_columns(df)
+    sample1 = df[col1].dropna()
+    sample2 = df[col2].dropna()
+    t_statistic, p_value = independent_sample_t_test(sample1, sample2)
+    print(f"\nResults of the independent-sample t-test:")
+    print(f"T-statistic: {t_statistic}")
+    print(f"P-value: {p_value}")
+
+def paired_sample_t():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    print("\n* 1st column: PRE-test data; 2nd column: POST-test data *\n")
+    col1, col2 = select_columns(df)
+    sample1 = df[col1].dropna()
+    sample2 = df[col2].dropna()
+    if len(sample1) != len(sample2):
+        print("Error: The selected columns have different lengths. A paired t-test requires equal-length samples.")
+        return
+    t_statistic, p_value = paired_sample_t_test(sample1, sample2)
+    print(f"\nResults of the paired-sample t-test:")
+    print(f"T-statistic: {t_statistic}")
+    print(f"P-value: {p_value}")
+
+def one_way_f():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    print("\n* Reminder: 1st column should be GROUP variable *\n")
+    group_column, data_column = select_columns(df)
+    df = df[[group_column, data_column]].dropna()
+    F_statistic, p_value = one_way_anova(df, group_column, data_column)
+    print(f"\nResults of the one-way ANOVA:")
+    print(f"F-statistic: {F_statistic}")
+    print(f"P-value: {p_value}")
 
 def binder():
     ask = input("Give a name to the output file (Y/n)? ")
@@ -459,6 +596,11 @@ def __init__():
     subparsers.add_parser('q', help='identify unique record(s) for excel')
     subparsers.add_parser('t', help='joint all excel(s) into one')
     subparsers.add_parser('x', help='split excel to piece(s)')
+    subparsers.add_parser('oz', help='run one-sample z-test')
+    subparsers.add_parser('ot', help='run one-sample t-test')
+    subparsers.add_parser('it', help='run independent-sample t-test')
+    subparsers.add_parser('pt', help='run paired-sample t-test')
+    subparsers.add_parser('oa', help='run one-way anova')
     args = parser.parse_args()
     if args.subcommand == 'a':
         base_directory = os.getcwd()
@@ -513,3 +655,13 @@ def __init__():
         xmatch()
     elif args.subcommand == 'q':
         uniquex()
+    elif args.subcommand == 'oz':
+        one_sample_z()
+    elif args.subcommand == 'ot':
+        one_sample_t()
+    elif args.subcommand == 'it':
+        independ_sample_t()
+    elif args.subcommand == 'pt':
+        paired_sample_t()
+    elif args.subcommand == 'oa':
+        one_way_f()
