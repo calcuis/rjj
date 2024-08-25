@@ -23,6 +23,7 @@ rjj a
 ```
 *return file statistics and a summary report; include sha256 hash, size, duplicate and uniqueness count, etc.*
 ### data transformer
+help you prepare your csv data file(s)
 #### convertor
 convert json to csv
 ```
