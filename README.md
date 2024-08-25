@@ -127,7 +127,9 @@ rjj it
 ```
 rjj pt
 ```
+*select first column as pre-test data; second column as post-test data*
 #### one-way anova
 ```
 rjj oa
 ```
+*select first column as group variable; then second column as data*
