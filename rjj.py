@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.2.5"
+__version__="0.2.6"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -112,6 +112,10 @@ def one_way_anova(df, group_column, data_column):
     F_statistic, p_value = stats.f_oneway(*groups)
     return F_statistic, p_value
 
+def correlation_analysis(sample1, sample2):
+    r_value, p_value = stats.pearsonr(sample1, sample2)
+    return r_value, p_value
+
 def one_sample_z():
     csv_files = list_csv_files()
     if not csv_files:
@@ -190,6 +194,24 @@ def one_way_f():
     F_statistic, p_value = one_way_anova(df, group_column, data_column)
     print(f"\nResults of the one-way ANOVA:")
     print(f"F-statistic: {F_statistic}")
+    print(f"P-value: {p_value}")
+
+def pearson_r():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    col1, col2 = select_columns(df)
+    sample1 = df[col1].dropna()
+    sample2 = df[col2].dropna()
+    if len(sample1) != len(sample2):
+        print("Error: The selected columns have different lengths. Correlation analysis requires equal-length samples.")
+        return
+    r_value, p_value = correlation_analysis(sample1, sample2)
+    print(f"\nResults of the correlation analysis:")
+    print(f"Correlation coefficient (r): {r_value}")
     print(f"P-value: {p_value}")
 
 def binder():
@@ -649,6 +671,7 @@ def __init__():
     subparsers.add_parser('it', help='run independent-sample t-test')
     subparsers.add_parser('pt', help='run paired-sample t-test')
     subparsers.add_parser('oa', help='run one-way anova')
+    subparsers.add_parser('ca', help='run correlation analysis')
     subparsers.add_parser('dir', help='create folder(s)')
     subparsers.add_parser('p', help='draw a scatter plot')
     args = parser.parse_args()
@@ -715,6 +738,8 @@ def __init__():
         paired_sample_t()
     elif args.subcommand == 'oa':
         one_way_f()
+    elif args.subcommand == 'ca':
+        pearson_r()
     elif args.subcommand == 'dir':
         mk_dir()
     elif args.subcommand == 'p':
