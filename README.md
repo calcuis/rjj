@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.2.4-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.2.5-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -16,12 +16,6 @@ rjj -v
 ```
 rjj -h
 ```
-#### analyzor
-run file analysis (process time depends on file size)
-```
-rjj a
-```
-*return file statistics and a summary report; include sha256 hash, size, duplicate and uniqueness count, etc.*
 ### data transformer
 help you prepare your csv data file(s)
 #### convertor
@@ -66,7 +60,7 @@ bind all csv files together by columns in the current directory
 rjj b
 ```
 *binder is different from jointer below; it can be considered as a horizontal merge whereas jointer is for vertical merge (basically by rows)*
-### jointer and splitter
+### jointer and splitter 📌✂️
 joint or split your data file(s)
 #### jointer
 joint all csv files in the current directory together🖇
@@ -92,7 +86,7 @@ joint all excels (.xls and .xlsx) in the current directory together; all file na
 rjj t
 ```
 *differ from csv jointer, since both .xls and .xlsx is accepted, and the file extention will not be taken, it will be merged while two of them share the same file name (cannot be split by the command above); understand this condition, make good use of it!* 🙌
-#### xmatch
+#### matxh
 identify matched/repeated record(s)🔍 in the current directory and extend to its sub-directories; for excel
 ```
 rjj h
@@ -110,6 +104,18 @@ locate the input `Keyword` among all excel files (.xls and .xlsx) in the current
 rjj k
 ```
 *this feature is similar to the csv filter; but since each excel file is possible to contain more than one sheet📄, the sheet number will be stored in the newly created column `Sheet_z`, then the exact coordinate (x,y) will be given after it, namely `Column_y` and `Row_x`; and the full record will be pasted behind as well; super kooooo* 🍻
+### file/folder manager 📂👓
+#### analyzor
+run file analysis (process time depends on file size)
+```
+rjj a
+```
+*return file statistics and a summary report; include sha256 hash, size, duplicate and uniqueness count, etc.*
+#### folder creator
+create folder(s) according to the selected list (prepare a column storing all the folder name first)
+```
+rjj dir
+```
 ### statistical analysis 🧮
 simple statistical analysis is now available to perform on rjj 🍻
 #### one-sample z-test
