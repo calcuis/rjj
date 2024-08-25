@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.2.4"
+__version__="0.2.5"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -37,6 +37,19 @@ def select_columns(df):
     col_index1 = int(input("Select the first column by number: ")) - 1
     col_index2 = int(input("Select the second column by number: ")) - 1
     return df.columns[col_index1], df.columns[col_index2]
+
+def mk_dir():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    print("\n* Select a column storing the folder list *\n")
+    selected_column = select_column(df)
+    for folder_name in df[selected_column].dropna().unique():
+        os.makedirs(str(folder_name), exist_ok=True)
+    print("Folders created successfully.")
 
 def plotter():
     csv_files = list_csv_files()
@@ -594,7 +607,7 @@ def xplit():
     else:
         print("No excel files are available in the current directory.")
 
-def joint():
+def xjoint():
     excel_files = [f for f in os.listdir() if f.endswith('.xls') or f.endswith('.xlsx') and f != output]
     dataframes = []
     if excel_files:
@@ -636,6 +649,7 @@ def __init__():
     subparsers.add_parser('it', help='run independent-sample t-test')
     subparsers.add_parser('pt', help='run paired-sample t-test')
     subparsers.add_parser('oa', help='run one-way anova')
+    subparsers.add_parser('dir', help='create folder(s)')
     subparsers.add_parser('p', help='draw a scatter plot')
     args = parser.parse_args()
     if args.subcommand == 'a':
@@ -682,7 +696,7 @@ def __init__():
     elif args.subcommand == 'x':
         xplit()
     elif args.subcommand == 't':
-        joint()
+        xjoint()
     elif args.subcommand == 'm':
         matcher()
     elif args.subcommand == 'u':
@@ -701,5 +715,7 @@ def __init__():
         paired_sample_t()
     elif args.subcommand == 'oa':
         one_way_f()
+    elif args.subcommand == 'dir':
+        mk_dir()
     elif args.subcommand == 'p':
         plotter()
