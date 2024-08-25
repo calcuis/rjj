@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.2.3"
+__version__="0.2.4"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -9,6 +9,9 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 from scipy.stats import norm
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
+import tkinter as tk
 
 def list_csv_files():
     return [f for f in os.listdir() if f.endswith('.csv')]
@@ -34,6 +37,38 @@ def select_columns(df):
     col_index1 = int(input("Select the first column by number: ")) - 1
     col_index2 = int(input("Select the second column by number: ")) - 1
     return df.columns[col_index1], df.columns[col_index2]
+
+def plotter():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    print("\n* 1st column: X-axis; 2nd column: Y-axis *\n")
+    col1, col2 = select_columns(df)
+    x = df[col1].dropna()
+    y = df[col2].dropna()
+    fig, ax = plt.subplots()
+    ax.scatter(x, y, color='black')
+    ask = input("Add a line connecting the points? (Y/n) ")
+    if ask.lower() == "y":
+        ax.plot(x, y, color='black')
+    xaxis = input("Give a name to X-axis: ")
+    ax.set_xlabel(xaxis)
+    yaxis = input("Give a name to Y-axis: ")
+    ax.set_ylabel(yaxis)
+    plot_title = input("Give a title to the Plot: ")
+    ax.set_title(plot_title)
+    print("Done! Please check the pop-up window for output.")
+    root = tk.Tk()
+    icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
+    root.iconphoto(False, icon)
+    root.title("rjj")
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+    root.mainloop()
 
 def one_sample_z_test(sample_data, population_mean, population_std):
     sample_mean = np.mean(sample_data)
@@ -601,6 +636,7 @@ def __init__():
     subparsers.add_parser('it', help='run independent-sample t-test')
     subparsers.add_parser('pt', help='run paired-sample t-test')
     subparsers.add_parser('oa', help='run one-way anova')
+    subparsers.add_parser('p', help='draw a scatter plot')
     args = parser.parse_args()
     if args.subcommand == 'a':
         base_directory = os.getcwd()
@@ -665,3 +701,5 @@ def __init__():
         paired_sample_t()
     elif args.subcommand == 'oa':
         one_way_f()
+    elif args.subcommand == 'p':
+        plotter()
