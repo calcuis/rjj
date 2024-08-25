@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.2.2-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.2.3-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -22,6 +22,29 @@ run file analysis (process time depends on file size)
 rjj a
 ```
 *return file statistics and a summary report; include sha256 hash, size, duplicate and uniqueness count, etc.*
+### statistical analysis session
+simple statistical analysis is now available to perform on rjj 🍻
+#### one-sample z-test
+```
+rjj oz
+```
+#### one-sample t-test
+```
+rjj ot
+```
+#### independent-sample t-test
+```
+rjj it
+```
+#### paired-sample t-test
+```
+rjj pt
+```
+#### one-way anova
+```
+rjj oa
+```
+### data transforming session
 #### convertor
 convert json to csv
 ```
