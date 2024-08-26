@@ -1,14 +1,13 @@
 # !/usr/bin/env python3
 
-__version__="0.3.1"
+__version__="0.3.2"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
 from datetime import datetime
+from scipy import stats
 import pandas as pd
 import numpy as np
-from scipy import stats
-from scipy.stats import norm
 
 def list_csv_files():
     return [f for f in os.listdir() if f.endswith('.csv')]
@@ -71,6 +70,39 @@ def plotter():
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
     ax.scatter(x, y, color='black')
+    ax.set_xlabel(xaxis)
+    ax.set_ylabel(yaxis)
+    ax.set_title(plot_title)
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+    root.mainloop()
+
+def scatter():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    print("\n* 1st column: X-axis; 2nd column: Y-axis *\n")
+    col1, col2 = select_columns(df)
+    x = df[col1].dropna()
+    y = df[col2].dropna()
+    xaxis = input("Give a name to X-axis: ")
+    yaxis = input("Give a name to Y-axis: ")
+    plot_title = input("Give a title to the Plot: ")
+    print("Done! Please check the pop-up window for output.")
+    import tkinter as tk
+    root = tk.Tk()
+    icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
+    root.iconphoto(False, icon)
+    root.title("rjj")
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    ax.scatter(x, y, color='black')
+    ax.plot(x, y, color='black')
     ax.set_xlabel(xaxis)
     ax.set_ylabel(yaxis)
     ax.set_title(plot_title)
@@ -149,6 +181,7 @@ def one_sample_z_test(sample_data, population_mean, population_std):
     sample_size = len(sample_data)
     standard_error = population_std / np.sqrt(sample_size)
     z_score = (sample_mean - population_mean) / standard_error
+    from scipy.stats import norm
     p_value = 2 * (1 - norm.cdf(abs(z_score)))
     return z_score, p_value
 
@@ -735,6 +768,7 @@ def __init__():
     subparsers.add_parser('ca', help='run correlation analysis')
     subparsers.add_parser('dir', help='create folder(s)')
     subparsers.add_parser('bar', help='draw a bar chart')
+    subparsers.add_parser('sar', help='draw a scatter plot with line')
     subparsers.add_parser('l', help='draw a line chart')
     subparsers.add_parser('p', help='draw a scatter plot')
     args = parser.parse_args()
@@ -812,6 +846,8 @@ def __init__():
         mk_dir()
     elif args.subcommand == 'bar':
         charter()
+    elif args.subcommand == 'sar':
+        scatter()
     elif args.subcommand == 'l':
         liner()
     elif args.subcommand == 'p':
