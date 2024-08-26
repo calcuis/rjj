@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.2.7"
+__version__="0.2.8"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -83,7 +83,7 @@ def plotter():
     canvas.get_tk_widget().pack()
     root.mainloop()
 
-def barchart():
+def charter():
     csv_files = list_csv_files()
     if not csv_files:
         print("No CSV files found in the current directory.")
@@ -728,6 +728,11 @@ def __init__():
             report_file='analysis_results.csv'
         save_file_report_to_csv(report_file, total_size_mb, no_of_files, no_of_unique_files, no_of_duplicate_files)
         print(f"Results of the File Analysis have been saved to '{report_file}'.")
+        print(f"\nSummary of the file analysis:")
+        print(f"Number of duplicate files: {no_of_duplicate_files}")
+        print(f"Number of unique files   : {no_of_unique_files}")
+        print(f"Number of files          : {no_of_files}")
+        print(f"Total size (MB)          : {total_size_mb}")
     elif args.subcommand == 'j':
         ask = input("Give a name to the output file (Y/n)? ")
         if  ask.lower() == 'y':
@@ -776,6 +781,6 @@ def __init__():
     elif args.subcommand == 'dir':
         mk_dir()
     elif args.subcommand == 'bar':
-        barchart()
+        charter()
     elif args.subcommand == 'p':
         plotter()
