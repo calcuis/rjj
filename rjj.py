@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.2.8"
+__version__="0.2.9"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -60,6 +60,11 @@ def plotter():
     df = pd.read_csv(selected_file)
     print("\n* 1st column: X-axis; 2nd column: Y-axis *\n")
     col1, col2 = select_columns(df)
+    print("\n* don't close the pop-up window while constructing the figure; or you will miss the output *\n")
+    root = tk.Tk()
+    icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
+    root.iconphoto(False, icon)
+    root.title("rjj")
     x = df[col1].dropna()
     y = df[col2].dropna()
     fig, ax = plt.subplots()
@@ -74,10 +79,6 @@ def plotter():
     plot_title = input("Give a title to the Plot: ")
     ax.set_title(plot_title)
     print("Done! Please check the pop-up window for output.")
-    root = tk.Tk()
-    icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
-    root.iconphoto(False, icon)
-    root.title("rjj")
     canvas = FigureCanvasTkAgg(fig, master=root)
     canvas.draw()
     canvas.get_tk_widget().pack()
@@ -92,6 +93,11 @@ def charter():
     df = pd.read_csv(selected_file)
     print("\n* 1st column: X-axis (i.e., categories); 2nd column: Y-axis *\n")
     col1, col2 = select_columns(df)
+    print("\n* don't close the pop-up window while constructing the figure; or you will miss the output *\n")
+    root = tk.Tk()
+    icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
+    root.iconphoto(False, icon)
+    root.title("rjj")
     x = df[col1].dropna()
     y = df[col2].dropna()
     fig, ax = plt.subplots()
@@ -106,10 +112,6 @@ def charter():
     plot_title = input("Give a title to the Chart: ")
     ax.set_title(plot_title)
     print("Done! Please check the pop-up window for output.")
-    root = tk.Tk()
-    icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
-    root.iconphoto(False, icon)
-    root.title("rjj")
     canvas = FigureCanvasTkAgg(fig, master=root)
     canvas.draw()
     canvas.get_tk_widget().pack()
