@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.3.4-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.3.5-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -184,6 +184,11 @@ rjj bx
 draw many boxplot(s) 📦📦📦
 ```
 rjj box
+```
+#### god knows
+draw a map from god angle 👼
+```
+rjj map
 ```
 #### donut
 bake me a donut 🍩
