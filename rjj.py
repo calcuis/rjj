@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.3.2"
+__version__="0.3.3"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -46,6 +46,38 @@ def mk_dir():
     for folder_name in df[selected_column].dropna().unique():
         os.makedirs(str(folder_name), exist_ok=True)
     print("Folders created successfully.")
+
+def heatmap():
+    ask = input("Do you want to taste a quarter? (Y/n) ")
+    if ask.lower() == "y":
+        x = np.linspace(-1, 15)
+        y = np.linspace(-1, 15)
+        title = "Quarter"
+    else:
+        x = np.linspace(-5, 5)
+        y = np.linspace(-5, 5)
+        title = "Donut"
+    x, y = np.meshgrid(x, y)
+    z = np.sin(np.sqrt(x**2 + y**2))
+    import tkinter as tk
+    root = tk.Tk()
+    icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
+    root.iconphoto(False, icon)
+    root.title("rjj")
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    surf = ax.plot_surface(x, y, z, cmap='gray', edgecolor='none')
+    fig.colorbar(surf)
+    ax.set_xlabel('X-axis')
+    ax.set_ylabel('Y-axis')
+    ax.set_zlabel('Z-axis')
+    ax.set_title(title)
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+    root.mainloop()
 
 def plotter():
     csv_files = list_csv_files()
@@ -125,7 +157,7 @@ def liner():
     y = df[col2].dropna()
     xaxis = input("Give a name to X-axis: ")
     yaxis = input("Give a name to Y-axis: ")
-    plot_title = input("Give a title to the Chart: ")
+    plot_title = input("Give a title to the Graph: ")
     print("Done! Please check the pop-up window for output.")
     import tkinter as tk
     root = tk.Tk()
@@ -771,6 +803,7 @@ def __init__():
     subparsers.add_parser('sar', help='draw a scatter plot with line')
     subparsers.add_parser('l', help='draw a line chart')
     subparsers.add_parser('p', help='draw a scatter plot')
+    subparsers.add_parser('donut', help='bake a donut')
     args = parser.parse_args()
     if args.subcommand == 'a':
         base_directory = os.getcwd()
@@ -852,3 +885,5 @@ def __init__():
         liner()
     elif args.subcommand == 'p':
         plotter()
+    elif args.subcommand == 'donut':
+        heatmap()
