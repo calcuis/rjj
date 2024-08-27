@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.3.4"
+__version__="0.3.5"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -33,6 +33,15 @@ def select_columns(df):
     col_index1 = int(input("Select the first column by number: ")) - 1
     col_index2 = int(input("Select the second column by number: ")) - 1
     return df.columns[col_index1], df.columns[col_index2]
+
+def select_columnx(df):
+    print("Available columns:")
+    for i, col in enumerate(df.columns):
+        print(f"{i + 1}: {col}")
+    col_index1 = int(input("Select the first column by number: ")) - 1
+    col_index2 = int(input("Select the second column by number: ")) - 1
+    col_index3 = int(input("Select the third column by number: ")) - 1
+    return df.columns[col_index1], df.columns[col_index2], df.columns[col_index3]
 
 def mk_dir():
     csv_files = list_csv_files()
@@ -105,6 +114,46 @@ def boxplots():
     ax.set_xlabel(xaxis)
     ax.set_ylabel(yaxis)
     ax.set_title(plot_title)
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+    root.mainloop()
+
+def mapper():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    print("\n* 1st column: X-axis ; 2nd column: Y-axis ; 3rd coloum: Z-axis *\n")
+    col1, col2, col3 = select_columnx(df)
+    x = df[col1].dropna()
+    y = df[col2].dropna()
+    z = df[col3].dropna()
+    xaxis = input("Give a name to X-axis: ")
+    yaxis = input("Give a name to Y-axis: ")
+    zaxis = input("Give a name to Z-axis: ")
+    title = input("Give a title to the Map: ")
+    print("Done! Please check the pop-up window for output.")
+    from scipy.interpolate import griddata
+    grid_x, grid_y = np.mgrid[min(x):max(x):100j, min(y):max(y):100j]
+    grid_z = griddata((x, y), z, (grid_x, grid_y), method='cubic')
+    import tkinter as tk
+    root = tk.Tk()
+    icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
+    root.iconphoto(False, icon)
+    root.title("rjj")
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    surf = ax.plot_surface(grid_x, grid_y, grid_z, cmap='gray', edgecolor='none')
+    fig.colorbar(surf)
+    ax.set_xlabel(xaxis)
+    ax.set_ylabel(yaxis)
+    ax.set_zlabel(zaxis)
+    ax.set_title(title)
     from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
     canvas = FigureCanvasTkAgg(fig, master=root)
     canvas.draw()
@@ -869,6 +918,7 @@ def __init__():
     subparsers.add_parser('p', help='draw a scatter plot')
     subparsers.add_parser('bx', help='draw a box plot')
     subparsers.add_parser('box', help='draw many boxplot(s)')
+    subparsers.add_parser('map', help='map from god anlge')
     subparsers.add_parser('donut', help='bake a donut')
     args = parser.parse_args()
     if args.subcommand == 'a':
@@ -955,5 +1005,7 @@ def __init__():
         boxplot()
     elif args.subcommand == 'box':
         boxplots()
+    elif args.subcommand == 'map':
+        mapper()
     elif args.subcommand == 'donut':
         heatmap()
