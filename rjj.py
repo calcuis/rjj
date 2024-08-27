@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.3.3"
+__version__="0.3.4"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -46,6 +46,70 @@ def mk_dir():
     for folder_name in df[selected_column].dropna().unique():
         os.makedirs(str(folder_name), exist_ok=True)
     print("Folders created successfully.")
+
+def boxplot():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    selected_column = select_column(df)
+    data = df[selected_column].dropna()
+    plot_title = input("Give a title to the Plot: ")
+    print("Done! Please check the pop-up window for output.")
+    import tkinter as tk
+    root = tk.Tk()
+    icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
+    root.iconphoto(False, icon)
+    root.title("rjj")
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    ax.boxplot(data)
+    ax.set_title(plot_title)
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+    root.mainloop()
+
+def boxplots():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    print("\n* 1st column: X-axis (i.e., GROUP variable); 2nd column: Y-axis (i.e., data) *\n")
+    col1, col2 = select_columns(df)
+    group = df[col1].dropna()
+    data = df[col2].dropna()
+    xaxis = input("Give a name to X-axis (Group): ")
+    yaxis = input("Give a name to Y-axis (Value): ")
+    plot_title = input("Give a title to the Plot: ")
+    print("Done! Please check the pop-up window for output.")
+    import tkinter as tk
+    root = tk.Tk()
+    icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
+    root.iconphoto(False, icon)
+    root.title("rjj")
+    import matplotlib.pyplot as plt
+    grouped_data = {}
+    for g, d in zip(group, data):
+        if g not in grouped_data:
+            grouped_data[g] = []
+        grouped_data[g].append(d)
+    box_data = [grouped_data[g] for g in grouped_data]
+    fig, ax = plt.subplots()
+    ax.boxplot(box_data, labels=grouped_data.keys())
+    ax.set_xlabel(xaxis)
+    ax.set_ylabel(yaxis)
+    ax.set_title(plot_title)
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+    root.mainloop()
 
 def heatmap():
     ask = input("Do you want to taste a quarter? (Y/n) ")
@@ -800,9 +864,11 @@ def __init__():
     subparsers.add_parser('ca', help='run correlation analysis')
     subparsers.add_parser('dir', help='create folder(s)')
     subparsers.add_parser('bar', help='draw a bar chart')
-    subparsers.add_parser('sar', help='draw a scatter plot with line')
-    subparsers.add_parser('l', help='draw a line chart')
+    subparsers.add_parser('pl', help='draw a scatter plot with line')
+    subparsers.add_parser('l', help='draw a line graph')
     subparsers.add_parser('p', help='draw a scatter plot')
+    subparsers.add_parser('bx', help='draw a box plot')
+    subparsers.add_parser('box', help='draw many boxplot(s)')
     subparsers.add_parser('donut', help='bake a donut')
     args = parser.parse_args()
     if args.subcommand == 'a':
@@ -879,11 +945,15 @@ def __init__():
         mk_dir()
     elif args.subcommand == 'bar':
         charter()
-    elif args.subcommand == 'sar':
+    elif args.subcommand == 'pl':
         scatter()
     elif args.subcommand == 'l':
         liner()
     elif args.subcommand == 'p':
         plotter()
+    elif args.subcommand == 'bx':
+        boxplot()
+    elif args.subcommand == 'box':
+        boxplots()
     elif args.subcommand == 'donut':
         heatmap()
