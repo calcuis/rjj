@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.3.3-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.3.4-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -162,7 +162,7 @@ rjj p
 #### scatter
 draw a scatter plot with line connecting points
 ```
-rjj sar
+rjj pl
 ```
 #### liner
 draw a line graph 📉
@@ -175,7 +175,16 @@ draw a bar chart 📊
 rjj bar
 ```
 *opt to assign label(s)* 🍻
-
+#### boxplot
+draw one boxplot 📦
+```
+rjj bx
+```
+#### boxplotter
+draw many boxplot(s) 📦📦📦
+```
+rjj box
+```
 #### donut
 bake me a donut 🍩
 ```
