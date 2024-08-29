@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.3.6-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.3.7-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -141,7 +141,7 @@ rjj it
 ```
 *select first column as data of group 1; second column as data of group 2*
 #### levene test
-run Levene test for two groups
+run Levene test for two groups (centered by mean)
 ```
 rjj lv
 ```
