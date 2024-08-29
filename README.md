@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.3.5-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.3.6-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -128,18 +128,30 @@ compare group with norm (population mean known)
 ```
 rjj ot
 ```
-#### independent-sample t-test
-compare two independent groups; able to opt to calculate it based on equal variance assumed or not assumed
-```
-rjj it
-```
-*select first column as data of group 1; second column as data of group 2*
 #### paired-sample t-test
 compare group across time/paired-feature
 ```
 rjj pt
 ```
 *select first column as pre-test data; second column as post-test data*
+#### independent-sample t-test
+compare two independent groups; able to opt to calculate it based on equal variance assumed or not assumed
+```
+rjj it
+```
+*select first column as data of group 1; second column as data of group 2*
+#### levene test
+run Levene test for two groups
+```
+rjj lv
+```
+*select first column as data of group 1; second column as data of group 2*
+#### homogeneity of variance
+run Levene test for two or more groups
+```
+rjj hv
+```
+*select first column as group variable; second column as data*
 #### one-way anova
 compare two or more groups
 ```
