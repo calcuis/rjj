@@ -1,11 +1,11 @@
 # !/usr/bin/env python3
 
-__version__="0.3.6"
+__version__="0.3.7"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
 from datetime import datetime
-from scipy import stats
+import scipy.stats as st
 import pandas as pd
 import numpy as np
 
@@ -331,37 +331,37 @@ def one_sample_z_test(sample_data, population_mean, population_std):
     return z_score, p_value
 
 def one_sample_t_test(sample_data, population_mean):
-    t_statistic, p_value = stats.ttest_1samp(sample_data, population_mean)
+    t_statistic, p_value = st.ttest_1samp(sample_data, population_mean)
     return t_statistic, p_value
 
 def independent_sample_t_test(sample1, sample2):
     ask = input("Equal variance assumed (Y/n)? ")
     if ask.lower() == "y":
-        t_statistic, p_value = stats.ttest_ind(sample1, sample2)
+        t_statistic, p_value = st.ttest_ind(sample1, sample2)
     else:
-        t_statistic, p_value = stats.ttest_ind(sample1, sample2, equal_var=False)
+        t_statistic, p_value = st.ttest_ind(sample1, sample2, equal_var=False)
     return t_statistic, p_value
 
 def paired_sample_t_test(sample1, sample2):
-    t_statistic, p_value = stats.ttest_rel(sample1, sample2)
+    t_statistic, p_value = st.ttest_rel(sample1, sample2)
     return t_statistic, p_value
 
 def one_way_anova(df, group_column, data_column):
     groups = df.groupby(group_column)[data_column].apply(list)
-    F_statistic, p_value = stats.f_oneway(*groups)
+    F_statistic, p_value = st.f_oneway(*groups)
     return F_statistic, p_value
 
 def correlation_analysis(sample1, sample2):
-    r_value, p_value = stats.pearsonr(sample1, sample2)
+    r_value, p_value = st.pearsonr(sample1, sample2)
     return r_value, p_value
 
 def levene_two(sample1, sample2):
-    w_statistic, p_value = stats.levene(sample1, sample2)
+    w_statistic, p_value = st.levene(sample1, sample2, center='mean')
     return w_statistic, p_value
 
 def levene_test(df, group_column, data_column):
     groups = [group[data_column].values for name, group in df.groupby(group_column)]
-    W_statistic, p_value = stats.levene(*groups)
+    W_statistic, p_value = st.levene(*groups) # default: center='median'
     return W_statistic, p_value
 
 def levene_t():
@@ -375,7 +375,7 @@ def levene_t():
     sample1 = df[col1].dropna()
     sample2 = df[col2].dropna()
     w_statistic, p_value = levene_two(sample1, sample2)
-    print(f"\nResults of Levene's test:")
+    print(f"\nResults of Levene's test (centered by mean):")
     print(f"W-statistic: {w_statistic}")
     print(f"P-value: {p_value}")
 
@@ -390,7 +390,7 @@ def levene_w():
     group_column, data_column = select_columns(df)
     df = df[[group_column, data_column]].dropna()
     W_statistic, p_value = levene_test(df, group_column, data_column)
-    print(f"\nResults of Levene's test for homogeneity of variance:")
+    print(f"\nResults of Levene's test of homogeneity of variance:")
     print(f"W-statistic: {W_statistic}")
     print(f"P-value: {p_value}")
 
