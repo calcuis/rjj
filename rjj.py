@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.3.7"
+__version__="0.3.8"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -361,7 +361,15 @@ def levene_two(sample1, sample2):
 
 def levene_test(df, group_column, data_column):
     groups = [group[data_column].values for name, group in df.groupby(group_column)]
-    W_statistic, p_value = st.levene(*groups) # default: center='median'
+    ask = input("Center by mean (Y/n)? ")
+    if ask.lower() == "y":
+        ask2 = input("Trim the mean (Y/n)? ")
+        if ask2.lower() == "y":
+            method = "trimmed"
+        else: method = "mean"
+    else:
+        method = "median"
+    W_statistic, p_value = st.levene(*groups, center=method)
     return W_statistic, p_value
 
 def levene_t():
