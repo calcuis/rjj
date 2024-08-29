@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.3.5"
+__version__="0.3.6"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -354,6 +354,45 @@ def one_way_anova(df, group_column, data_column):
 def correlation_analysis(sample1, sample2):
     r_value, p_value = stats.pearsonr(sample1, sample2)
     return r_value, p_value
+
+def levene_two(sample1, sample2):
+    w_statistic, p_value = stats.levene(sample1, sample2)
+    return w_statistic, p_value
+
+def levene_test(df, group_column, data_column):
+    groups = [group[data_column].values for name, group in df.groupby(group_column)]
+    W_statistic, p_value = stats.levene(*groups)
+    return W_statistic, p_value
+
+def levene_t():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    col1, col2 = select_columns(df)
+    sample1 = df[col1].dropna()
+    sample2 = df[col2].dropna()
+    w_statistic, p_value = levene_two(sample1, sample2)
+    print(f"\nResults of Levene's test:")
+    print(f"W-statistic: {w_statistic}")
+    print(f"P-value: {p_value}")
+
+def levene_w():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    print("\n* Reminder: 1st column should be GROUP variable *\n")
+    group_column, data_column = select_columns(df)
+    df = df[[group_column, data_column]].dropna()
+    W_statistic, p_value = levene_test(df, group_column, data_column)
+    print(f"\nResults of Levene's test for homogeneity of variance:")
+    print(f"W-statistic: {W_statistic}")
+    print(f"P-value: {p_value}")
 
 def one_sample_z():
     csv_files = list_csv_files()
@@ -907,8 +946,10 @@ def __init__():
     subparsers.add_parser('x', help='split excel to piece(s)')
     subparsers.add_parser('oz', help='run one-sample z-test')
     subparsers.add_parser('ot', help='run one-sample t-test')
-    subparsers.add_parser('it', help='run independent-sample t-test')
     subparsers.add_parser('pt', help='run paired-sample t-test')
+    subparsers.add_parser('it', help='run independent-sample t-test')
+    subparsers.add_parser('lv', help='run levene test for two groups')
+    subparsers.add_parser('hv', help='run homogeneity test of variance')
     subparsers.add_parser('oa', help='run one-way anova')
     subparsers.add_parser('ca', help='run correlation analysis')
     subparsers.add_parser('dir', help='create folder(s)')
@@ -983,10 +1024,14 @@ def __init__():
         one_sample_z()
     elif args.subcommand == 'ot':
         one_sample_t()
-    elif args.subcommand == 'it':
-        independ_sample_t()
     elif args.subcommand == 'pt':
         paired_sample_t()
+    elif args.subcommand == 'it':
+        independ_sample_t()
+    elif args.subcommand == 'lv':
+        levene_t()
+    elif args.subcommand == 'hv':
+        levene_w()
     elif args.subcommand == 'oa':
         one_way_f()
     elif args.subcommand == 'ca':
