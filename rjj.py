@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.3.8"
+__version__="0.3.9"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -500,6 +500,66 @@ def pearson_r():
     print(f"Correlation coefficient (r): {r_value}")
     print(f"P-value: {p_value}")
 
+def paired_sample_ttest_power_analysis(effect_size, alpha, power):
+    from statsmodels.stats.power import TTestPower
+    analysis = TTestPower()
+    sample_size = analysis.solve_power(effect_size=effect_size, alpha=alpha, power=power, alternative='two-sided')
+    return sample_size
+
+def independent_sample_ttest_power_analysis(effect_size, alpha, power):
+    from statsmodels.stats.power import TTestIndPower
+    analysis = TTestIndPower()
+    sample_size = analysis.solve_power(effect_size=effect_size, alpha=alpha, power=power, alternative='two-sided')
+    return sample_size
+
+def one_way_anova_power_analysis(effect_size, alpha, power, groups):
+    from statsmodels.stats.power import FTestAnovaPower
+    analysis = FTestAnovaPower()
+    sample_size = analysis.solve_power(effect_size=effect_size, alpha=alpha, power=power, k_groups=groups)
+    return sample_size
+
+def correlation_power_analysis(r, alpha, power):
+    effect_size = np.arctanh(r) * np.sqrt(2)
+    from statsmodels.stats.power import NormalIndPower
+    analysis = NormalIndPower()
+    sample_size = analysis.solve_power(effect_size=effect_size, alpha=alpha, power=power, alternative='two-sided')
+    return sample_size
+
+def pa_pt():
+    effect_size = float(input("Enter the desired effect size (e.g., 0.5 for medium effect size): "))
+    alpha = float(input("Enter the significance level alpha (e.g., 0.05): "))
+    power = float(input("Enter the desired power (e.g., 0.8): "))
+    sample_size = paired_sample_ttest_power_analysis(effect_size, alpha, power)
+    print(f"\nEstimated minimum sample size required for paired-sample t-test:")
+    print(f"Sample size per group: {sample_size:.2f}")
+
+def pa_it():
+    effect_size = float(input("Enter the desired effect size (Cohen's d, e.g., 0.5 for medium effect): "))
+    alpha = float(input("Enter the significance level alpha (e.g., 0.05): "))
+    power = float(input("Enter the desired power (e.g., 0.8): "))
+    sample_size = independent_sample_ttest_power_analysis(effect_size, alpha, power)
+    print(f"\nEstimated minimum sample size required for independent-sample t-test:")
+    print(f"Sample size per group: {sample_size:.2f}")
+
+def pa_oa():
+    effect_size = float(input("Enter the desired effect size (Cohen's f, e.g., 0.25 for medium effect): "))
+    alpha = float(input("Enter the significance level alpha (e.g., 0.05): "))
+    power = float(input("Enter the desired power (e.g., 0.8): "))
+    groups = int(input("Enter the number of groups in the ANOVA: "))
+    sample_size = one_way_anova_power_analysis(effect_size, alpha, power, groups)
+    total_sample_size = sample_size * groups
+    print(f"\nEstimated minimum sample size required for one-way ANOVA:")
+    print(f"Sample size per group: {sample_size:.2f}")
+    print(f"Total sample size (for all groups): {total_sample_size:.2f}")
+
+def pa_r():
+    correlation_coefficient = float(input("Enter the expected correlation coefficient (e.g., 0.3 for moderate correlation): "))
+    alpha = float(input("Enter the significance level alpha (e.g., 0.05): "))
+    power = float(input("Enter the desired power (e.g., 0.8): "))
+    sample_size = correlation_power_analysis(correlation_coefficient, alpha, power)
+    print(f"\nEstimated minimum sample size required for correlation analysis:")
+    print(f"Sample size: {sample_size:.2f}")
+
 def binder():
     ask = input("Give a name to the output file (Y/n)? ")
     if  ask.lower() == 'y':
@@ -960,6 +1020,10 @@ def __init__():
     subparsers.add_parser('hv', help='run homogeneity test of variance')
     subparsers.add_parser('oa', help='run one-way anova')
     subparsers.add_parser('ca', help='run correlation analysis')
+    subparsers.add_parser('pp', help='run power analysis for paired-sample t-test')
+    subparsers.add_parser('pi', help='run power analysis for independent-sample t-test')
+    subparsers.add_parser('po', help='run power analysis for one-way anova')
+    subparsers.add_parser('pr', help='run power analysis for correlation coefficient')
     subparsers.add_parser('dir', help='create folder(s)')
     subparsers.add_parser('bar', help='draw a bar chart')
     subparsers.add_parser('pl', help='draw a scatter plot with line')
@@ -1044,6 +1108,14 @@ def __init__():
         one_way_f()
     elif args.subcommand == 'ca':
         pearson_r()
+    elif args.subcommand == 'pp':
+        pa_pt()
+    elif args.subcommand == 'pi':
+        pa_it()
+    elif args.subcommand == 'po':
+        pa_oa()
+    elif args.subcommand == 'pr':
+        pa_r()
     elif args.subcommand == 'dir':
         mk_dir()
     elif args.subcommand == 'bar':
