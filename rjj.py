@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.3.9"
+__version__="0.4.0"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -320,6 +320,66 @@ def charter():
     canvas.draw()
     canvas.get_tk_widget().pack()
     root.mainloop()
+
+def calculate_statistics(data):
+    data = data.dropna()
+    n = len(data)
+    total = data.sum()
+    mode = data.mode()[0]
+    median = data.median()
+    mean = data.mean()
+    std_dev = data.std()
+    std_error = std_dev / (n ** 0.5)
+    Q0 = data.min()
+    Q1 = data.quantile(0.25)
+    Q3 = data.quantile(0.75)
+    Q4 = data.max()
+    return {
+        "Count": n,
+        "Sum": total,
+        "Mode": mode,
+        "Minimum (Q0):": Q0,
+        "1st Quartile:": Q1,
+        "Median  (Q2):": median,
+        "3rd Quartile:": Q3,
+        "Maximum (Q4):": Q4,
+        "Mean": mean,
+        "Standard Deviation": std_dev,
+        "Standard Error": std_error,
+    }
+
+def display_statistics(grouped_data):
+    for group, data in grouped_data:
+        print(f"\nStatistics for group '{group}':")
+        stats = calculate_statistics(data)
+        for stat, value in stats.items():
+            print(f"{stat}: {value}")
+
+def display_column():
+    files = list_csv_files()
+    if not files:
+        print("No CSV files found in the current directory.")
+        return
+    csv_file = select_csv_file(files)
+    dataframe = pd.read_csv(csv_file)
+    column = select_column(dataframe)
+    data = dataframe[column].dropna()
+    stats = calculate_statistics(data)
+    print("\nStatistics for the selected column:")
+    for stat, value in stats.items():
+        print(f"{stat}: {value}")
+
+def display_group():
+    files = list_csv_files()
+    if not files:
+        print("No CSV files found in the current directory.")
+        return
+    csv_file = select_csv_file(files)
+    dataframe = pd.read_csv(csv_file)
+    print("\n* Reminder: 1st column should be GROUP variable *\n")
+    group_column, data_column = select_columns(dataframe)
+    grouped_data = dataframe.groupby(group_column)[data_column]
+    display_statistics(grouped_data)
 
 def one_sample_z_test(sample_data, population_mean, population_std):
     sample_mean = np.mean(sample_data)
@@ -1024,6 +1084,8 @@ def __init__():
     subparsers.add_parser('pi', help='run power analysis for independent-sample t-test')
     subparsers.add_parser('po', help='run power analysis for one-way anova')
     subparsers.add_parser('pr', help='run power analysis for correlation coefficient')
+    subparsers.add_parser('n', help='give descriptive statistics for a column')
+    subparsers.add_parser('g', help='give descriptive statistics by group(s)')
     subparsers.add_parser('dir', help='create folder(s)')
     subparsers.add_parser('bar', help='draw a bar chart')
     subparsers.add_parser('pl', help='draw a scatter plot with line')
@@ -1092,6 +1154,10 @@ def __init__():
         xmatch()
     elif args.subcommand == 'q':
         uniquex()
+    elif args.subcommand == 'n':
+        display_column()
+    elif args.subcommand == 'g':
+        display_group()
     elif args.subcommand == 'oz':
         one_sample_z()
     elif args.subcommand == 'ot':
