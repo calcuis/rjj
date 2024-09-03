@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.4.0"
+__version__="0.4.1"
 
 import argparse, os, json, csv, glob, hashlib
 from collections import defaultdict
@@ -18,6 +18,16 @@ def select_csv_file(csv_files):
         print(f"{i + 1}: {file}")
     file_index = int(input("Select a CSV file by number: ")) - 1
     return csv_files[file_index]
+
+def select_csv_file_gui():
+    import tkinter as tk
+    root = tk.Tk()
+    icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
+    root.iconphoto(False, icon)
+    root.withdraw()
+    from tkinter import filedialog
+    file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+    return file_path
 
 def select_column(df):
     print("Available columns:")
@@ -55,6 +65,48 @@ def mk_dir():
     for folder_name in df[selected_column].dropna().unique():
         os.makedirs(str(folder_name), exist_ok=True)
     print("Folders created successfully.")
+
+def clean_data(df, columns):
+    df = df[columns].replace([np.inf, -np.inf], np.nan)
+    df = df.dropna()
+    return df
+
+def regression_analysis(df, dependent_var, predictors):
+    import statsmodels.api as sm
+    X = df[predictors]
+    y = df[dependent_var]
+    X = sm.add_constant(X)
+    model = sm.OLS(y, X)
+    results = model.fit()
+    return results
+
+def regression():
+    file_path = select_csv_file_gui()
+    if not file_path:
+        print("No file selected. Exiting.")
+        return
+    df = pd.read_csv(file_path)
+    print("Columns in the selected CSV file:", df.columns.tolist())
+    dependent_var = input("Enter the column name for the dependent variable: ")
+    if dependent_var not in df.columns:
+        print(f"Column '{dependent_var}' not found in the CSV file. Exiting.")
+        return
+    num_predictors = int(input("Enter the number of predictors: "))
+    predictors = []
+    for i in range(num_predictors):
+        predictor = input(f"Enter the column name for predictor {i+1}: ")
+        if predictor not in df.columns:
+            print(f"Column '{predictor}' not found in the CSV file. Exiting.")
+            return
+        predictors.append(predictor)
+    selected_columns = [dependent_var] + predictors
+    df_clean = clean_data(df, selected_columns)
+    if df_clean.empty:
+        print("No data left after cleaning. Exiting.")
+        return
+    results = regression_analysis(df_clean, dependent_var, predictors)
+    print("\nRegression Analysis Summary:")
+    print(results.summary())
 
 def boxplot():
     csv_files = list_csv_files()
@@ -1080,6 +1132,7 @@ def __init__():
     subparsers.add_parser('hv', help='run homogeneity test of variance')
     subparsers.add_parser('oa', help='run one-way anova')
     subparsers.add_parser('ca', help='run correlation analysis')
+    subparsers.add_parser('ra', help='run regression analysis')
     subparsers.add_parser('pp', help='run power analysis for paired-sample t-test')
     subparsers.add_parser('pi', help='run power analysis for independent-sample t-test')
     subparsers.add_parser('po', help='run power analysis for one-way anova')
@@ -1174,6 +1227,8 @@ def __init__():
         one_way_f()
     elif args.subcommand == 'ca':
         pearson_r()
+    elif args.subcommand == 'ra':
+        regression()
     elif args.subcommand == 'pp':
         pa_pt()
     elif args.subcommand == 'pi':
