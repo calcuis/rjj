@@ -1,8 +1,8 @@
 # !/usr/bin/env python3
 
-__version__="0.4.1"
+__version__="0.4.2"
 
-import argparse, os, json, csv, glob, hashlib
+import argparse, os, json, csv, glob, hashlib, math
 from collections import defaultdict
 from datetime import datetime
 import scipy.stats as st
@@ -662,7 +662,7 @@ def pa_oa():
     total_sample_size = sample_size * groups
     print(f"\nEstimated minimum sample size required for one-way ANOVA:")
     print(f"Sample size per group: {sample_size:.2f}")
-    print(f"Total sample size (for all groups): {total_sample_size:.2f}")
+    print(f"Total sample size (for all groups): {math.ceil(total_sample_size)}")
 
 def pa_r():
     correlation_coefficient = float(input("Enter the expected correlation coefficient (e.g., 0.3 for moderate correlation): "))
@@ -670,7 +670,29 @@ def pa_r():
     power = float(input("Enter the desired power (e.g., 0.8): "))
     sample_size = correlation_power_analysis(correlation_coefficient, alpha, power)
     print(f"\nEstimated minimum sample size required for correlation analysis:")
-    print(f"Sample size: {sample_size:.2f}")
+    print(f"Sample size: {math.ceil(sample_size)}")
+
+def regression_power_analysis(alpha, power, num_predictors, effect_size, min_r2):
+    beta = 1 - power
+    from scipy.stats import norm
+    z_alpha = norm.ppf(1 - alpha / 2)
+    z_beta = norm.ppf(beta)
+    numerator = (z_alpha + z_beta) ** 2 * (num_predictors + 1)
+    denominator = (effect_size - min_r2) ** 2
+    sample_size = numerator / denominator
+    return math.ceil(sample_size)
+
+def pa_ra():
+    min_r2 = 0.1
+    effect_size = float(input("Enter the expected effect size (R^2, e.g. 0.3 for medium effect): "))
+    if effect_size <= min_r2:
+        print(f"Input must be higher than {min_r2} (the minimum R^2 value for null hypothesis)")
+        return
+    alpha = float(input("Enter the significance level (alpha, e.g., 0.05): "))
+    power = float(input("Enter the desired statistical power (e.g., 0.8): "))
+    num_predictors = int(input("Enter the number of predictors: "))
+    sample_size = regression_power_analysis(alpha, power, num_predictors, effect_size, min_r2)
+    print(f"Estimated minimum sample size required for regression analysis: {sample_size}")
 
 def binder():
     ask = input("Give a name to the output file (Y/n)? ")
@@ -1136,7 +1158,8 @@ def __init__():
     subparsers.add_parser('pp', help='run power analysis for paired-sample t-test')
     subparsers.add_parser('pi', help='run power analysis for independent-sample t-test')
     subparsers.add_parser('po', help='run power analysis for one-way anova')
-    subparsers.add_parser('pr', help='run power analysis for correlation coefficient')
+    subparsers.add_parser('pc', help='run power analysis for correlation coefficient')
+    subparsers.add_parser('pr', help='run power analysis for regression')
     subparsers.add_parser('n', help='give descriptive statistics for a column')
     subparsers.add_parser('g', help='give descriptive statistics by group(s)')
     subparsers.add_parser('dir', help='create folder(s)')
@@ -1235,8 +1258,10 @@ def __init__():
         pa_it()
     elif args.subcommand == 'po':
         pa_oa()
-    elif args.subcommand == 'pr':
+    elif args.subcommand == 'pc':
         pa_r()
+    elif args.subcommand == 'pr':
+        pa_ra()
     elif args.subcommand == 'dir':
         mk_dir()
     elif args.subcommand == 'bar':
