@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.4.3"
+__version__="0.4.4"
 
 import argparse, os, json, csv, glob, hashlib, math
 from collections import defaultdict
@@ -676,8 +676,11 @@ def regression_power_analysis(r2, alpha, power, num_predictors):
     alpha_z = st.norm.ppf(1 - alpha / 2)
     power_z = st.norm.ppf(power)
     n = (alpha_z + power_z)**2 * (num_predictors + 1) / f2
-    adj = 50 + 8.89*num_predictors
-    if adj < n:
+    if power > 0.8:
+        adj = 68 + 9.89*num_predictors
+    else:
+        adj = 50 + 8.89*num_predictors
+    if adj < n and f2 > 0.098:
         n = adj
     return math.ceil(n)
 
@@ -687,7 +690,7 @@ def pa_ra():
     power = float(input("Enter the desired power (e.g., 0.8): "))
     num_predictors = int(input("Enter the number of predictors: "))
     min_sample_size = regression_power_analysis(r2, alpha, power, num_predictors)
-    print(f"\nSimple linear regression with {num_predictors} predictors, α={alpha}, power={power}, f^2={r2/(1-r2):.3f}")
+    print(f"\nSimple/multiple regression with {num_predictors} predictors, α={alpha}, power={power}, f^2={r2/(1-r2):.3f}")
     print(f"Estimated minimum sample size required: {min_sample_size}")
 
 def binder():
