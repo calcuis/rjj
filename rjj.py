@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.4.4"
+__version__="0.4.5"
 
 import argparse, os, json, csv, glob, hashlib, math
 from collections import defaultdict
@@ -680,7 +680,7 @@ def regression_power_analysis(r2, alpha, power, num_predictors):
         adj = 68 + 9.89*num_predictors
     else:
         adj = 50 + 8.89*num_predictors
-    if adj < n and f2 > 0.098:
+    if adj < n and f2 > 0.098 and alpha >0.03:
         n = adj
     return math.ceil(n)
 
