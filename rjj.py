@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.4.2"
+__version__="0.4.3"
 
 import argparse, os, json, csv, glob, hashlib, math
 from collections import defaultdict
@@ -438,8 +438,7 @@ def one_sample_z_test(sample_data, population_mean, population_std):
     sample_size = len(sample_data)
     standard_error = population_std / np.sqrt(sample_size)
     z_score = (sample_mean - population_mean) / standard_error
-    from scipy.stats import norm
-    p_value = 2 * (1 - norm.cdf(abs(z_score)))
+    p_value = 2 * (1 - st.norm.cdf(abs(z_score)))
     return z_score, p_value
 
 def one_sample_t_test(sample_data, population_mean):
@@ -672,27 +671,24 @@ def pa_r():
     print(f"\nEstimated minimum sample size required for correlation analysis:")
     print(f"Sample size: {math.ceil(sample_size)}")
 
-def regression_power_analysis(alpha, power, num_predictors, effect_size, min_r2):
-    beta = 1 - power
-    from scipy.stats import norm
-    z_alpha = norm.ppf(1 - alpha / 2)
-    z_beta = norm.ppf(beta)
-    numerator = (z_alpha + z_beta) ** 2 * (num_predictors + 1)
-    denominator = (effect_size - min_r2) ** 2
-    sample_size = numerator / denominator
-    return math.ceil(sample_size)
+def regression_power_analysis(r2, alpha, power, num_predictors):
+    f2 = r2 / (1 - r2)
+    alpha_z = st.norm.ppf(1 - alpha / 2)
+    power_z = st.norm.ppf(power)
+    n = (alpha_z + power_z)**2 * (num_predictors + 1) / f2
+    adj = 50 + 8.89*num_predictors
+    if adj < n:
+        n = adj
+    return math.ceil(n)
 
 def pa_ra():
-    min_r2 = 0.1
-    effect_size = float(input("Enter the expected effect size (R^2, e.g. 0.3 for medium effect): "))
-    if effect_size <= min_r2:
-        print(f"Input must be higher than {min_r2} (the minimum R^2 value for null hypothesis)")
-        return
-    alpha = float(input("Enter the significance level (alpha, e.g., 0.05): "))
-    power = float(input("Enter the desired statistical power (e.g., 0.8): "))
+    r2 = float(input("Enter the effect size R^2 (e.g., 0.13): "))
+    alpha = float(input("Enter the alpha level  (e.g., 0.05): "))
+    power = float(input("Enter the desired power (e.g., 0.8): "))
     num_predictors = int(input("Enter the number of predictors: "))
-    sample_size = regression_power_analysis(alpha, power, num_predictors, effect_size, min_r2)
-    print(f"Estimated minimum sample size required for regression analysis: {sample_size}")
+    min_sample_size = regression_power_analysis(r2, alpha, power, num_predictors)
+    print(f"\nSimple linear regression with {num_predictors} predictors, α={alpha}, power={power}, f^2={r2/(1-r2):.3f}")
+    print(f"Estimated minimum sample size required: {min_sample_size}")
 
 def binder():
     ask = input("Give a name to the output file (Y/n)? ")
@@ -1158,7 +1154,7 @@ def __init__():
     subparsers.add_parser('pp', help='run power analysis for paired-sample t-test')
     subparsers.add_parser('pi', help='run power analysis for independent-sample t-test')
     subparsers.add_parser('po', help='run power analysis for one-way anova')
-    subparsers.add_parser('pc', help='run power analysis for correlation coefficient')
+    subparsers.add_parser('pc', help='run power analysis for correlation')
     subparsers.add_parser('pr', help='run power analysis for regression')
     subparsers.add_parser('n', help='give descriptive statistics for a column')
     subparsers.add_parser('g', help='give descriptive statistics by group(s)')
@@ -1169,7 +1165,7 @@ def __init__():
     subparsers.add_parser('p', help='draw a scatter plot')
     subparsers.add_parser('bx', help='draw a box plot')
     subparsers.add_parser('box', help='draw many boxplot(s)')
-    subparsers.add_parser('map', help='map from god anlge')
+    subparsers.add_parser('map', help='map from god view')
     subparsers.add_parser('donut', help='bake a donut')
     args = parser.parse_args()
     if args.subcommand == 'a':
