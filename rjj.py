@@ -1,8 +1,8 @@
 # !/usr/bin/env python3
 
-__version__="0.4.5"
+__version__="0.4.6"
 
-import argparse, os, json, csv, glob, hashlib, math
+import argparse, os, json, csv, glob, hashlib, random, math
 from collections import defaultdict
 from datetime import datetime
 import scipy.stats as st
@@ -680,8 +680,8 @@ def regression_power_analysis(r2, alpha, power, num_predictors):
         adj = 68 + 9.89*num_predictors
     else:
         adj = 50 + 8.89*num_predictors
-    if adj < n and f2 > 0.098 and alpha >0.03:
-        n = adj
+    if adj < n and f2 > 0.098 and alpha >= 0.05:
+        n = random.randrange(int(adj-num_predictors),int(adj+num_predictors))
     return math.ceil(n)
 
 def pa_ra():
