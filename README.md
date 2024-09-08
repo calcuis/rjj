@@ -197,7 +197,7 @@ rjj g
 ### reliability test
 run reliability analysis for a hypothetical construct; cheers! 🍻
 ```
-rjj ra
+rjj rt
 ```
 *Cronach alpha if item deleted is provided as well; make your item screening task easy*
 ### regression analysis
