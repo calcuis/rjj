@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.4.8-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.4.9-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -164,7 +164,17 @@ calculate Pearson correlation coefficient (r)
 rjj ca
 ```
 *explore the relationship between two variables*
+### descriptive statistics
+calculate it for a column
+```
+rjj n
+```
+calculate it by group(s)
+```
+rjj g
+```
 ### power analysis
+#### priori (sample size estimation)
 estimate sample size for `paired-sample t-test`
 ```
 rjj pp
@@ -185,14 +195,10 @@ estimate sample size for `regression analysis`
 ```
 rjj pr
 ```
-### descriptive statistics
-calculate it for a column
+#### post hoc (effect size evaluation)
+evaluate effect size for `one-sample t-test`
 ```
-rjj n
-```
-calculate it by group(s)
-```
-rjj g
+rjj et
 ```
 ### reliability test
 run reliability analysis for a hypothetical construct; cheers! 🍻
