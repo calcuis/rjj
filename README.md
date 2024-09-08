@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.4.9-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.5.0-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -196,7 +196,7 @@ estimate sample size for `regression analysis`
 rjj pr
 ```
 #### post hoc (effect size evaluation)
-evaluate effect size for `one-sample t-test`
+evaluate effect size and power for `one-sample t-test`
 ```
 rjj et
 ```
