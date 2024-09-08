@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.4.7"
+__version__="0.4.8"
 
 import argparse, os, json, csv, glob, hashlib, random, math
 from collections import defaultdict
@@ -1068,7 +1068,13 @@ def detector():
         choice = input(f"Enter your choice (1 to {len(csv_files)}): ")
         choice_index=int(choice)-1
         input2=csv_files[choice_index]
-        output = input("Give a name to the output file: ")
+        ask = input("Enter another file name instead of output (Y/n)? ")
+        if  ask.lower() == 'y':
+                given = input("Give a name to the output file: ")
+                output=given
+        else:
+                output="output"
+
         try:
             file1 = pd.read_csv(input1)
             file2 = pd.read_csv(input2)
