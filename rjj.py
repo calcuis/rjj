@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.4.6"
+__version__="0.4.7"
 
 import argparse, os, json, csv, glob, hashlib, random, math
 from collections import defaultdict
@@ -107,6 +107,46 @@ def regression():
     results = regression_analysis(df_clean, dependent_var, predictors)
     print("\nRegression Analysis Summary:")
     print(results.summary())
+
+def cronbach_alpha(df):
+    item_variances = df.var(axis=0, ddof=1)
+    total_variance = df.sum(axis=1).var(ddof=1)
+    n_items = df.shape[1]
+    alpha = (n_items / (n_items - 1)) * (1 - item_variances.sum() / total_variance)
+    return alpha
+
+def cronbach_alpha_if_deleted(df):
+    alphas = {}
+    for col in df.columns:
+        df_subset = df.drop(columns=[col])
+        alpha = cronbach_alpha(df_subset)
+        alphas[col] = alpha
+    return alphas
+
+def reliability_test():
+    file_path = select_csv_file_gui()
+    if file_path:
+        df = pd.read_csv(file_path)
+        print(f"Data loaded successfully from {file_path}")
+    else:
+        print("No file selected.")
+        exit()
+    num_items = int(input("Enter the number of items (columns) within the construct: "))
+    selected_columns = []
+    print("Available columns:", df.columns.tolist())
+    for i in range(num_items):
+        col_name = input(f"Select column {i + 1}: ")
+        while col_name not in df.columns:
+            print(f"{col_name} is not a valid column name. Please choose from: {df.columns.tolist()}")
+            col_name = input(f"Select column {i + 1}: ")
+        selected_columns.append(col_name)
+    df_selected = df[selected_columns]
+    overall_alpha = cronbach_alpha(df_selected)
+    print(f"Cronbach's alpha for the selected items is: {overall_alpha}")
+    alphas_if_deleted = cronbach_alpha_if_deleted(df_selected)
+    print("\nCronbach's alpha if an item is deleted:")
+    for item, alpha in alphas_if_deleted.items():
+        print(f" - {item}: {alpha}")
 
 def boxplot():
     csv_files = list_csv_files()
@@ -1154,6 +1194,7 @@ def __init__():
     subparsers.add_parser('oa', help='run one-way anova')
     subparsers.add_parser('ca', help='run correlation analysis')
     subparsers.add_parser('ra', help='run regression analysis')
+    subparsers.add_parser('rt', help='run reliability test')
     subparsers.add_parser('pp', help='run power analysis for paired-sample t-test')
     subparsers.add_parser('pi', help='run power analysis for independent-sample t-test')
     subparsers.add_parser('po', help='run power analysis for one-way anova')
@@ -1251,6 +1292,8 @@ def __init__():
         pearson_r()
     elif args.subcommand == 'ra':
         regression()
+    elif args.subcommand == 'rt':
+        reliability_test()
     elif args.subcommand == 'pp':
         pa_pt()
     elif args.subcommand == 'pi':
