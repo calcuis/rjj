@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.4.9"
+__version__="0.5.0"
 
 import argparse, os, json, csv, glob, hashlib, random, math
 from collections import defaultdict
@@ -82,15 +82,21 @@ def one_sample_t_test_v2():
     sample_std = np.std(sample_data, ddof=1)
     d_f = len(sample_data) - 1
     cohen_d = (sample_mean - population_mean) / sample_std
+    alpha = 0.05
+    from statsmodels.stats.power import TTestPower
+    power_analysis = TTestPower()
+    power = power_analysis.power(effect_size=cohen_d, nobs=len(sample_data), alpha=alpha, alternative='two-sided')
     print("\nResults of the One-Sample t-Test:")
     print(f"Sample Mean: {sample_mean:.4f}")
     print(f"Sample Standard Deviation (SD): {sample_std:.4f}")
     print(f"t({d_f}) = {t_statistic:.4f}")
     print(f"p-value = {p_value:.4f}")
     print(f"Effect Size (Cohen's d): {cohen_d:.4f}")
-    if p_value < 0.05: p = "p < .05"
+    print(f"Power (1-β): {power:.4f}")
+    if p_value <= 0.01: p = "p < .01"
+    elif p_value < 0.05 and p_value > 0.01: p = "p < .05"
     else: p = f"p = {p_value:.3f}"
-    print(f"\nReport format:\n{sample_mean:.2f} ± {sample_std:.3f}; t({d_f}) = {t_statistic:.3f}, {p}, d = {cohen_d:.2f}")
+    print(f"\nPublication/report format:\n{sample_mean:.2f} ± {sample_std:.3f}; t({d_f}) = {t_statistic:.3f}, {p}, d = {cohen_d:.2f}")
 
 def regression_analysis(df, dependent_var, predictors):
     import statsmodels.api as sm
