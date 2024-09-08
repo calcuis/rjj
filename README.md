@@ -212,6 +212,10 @@ draw a scatter plot with line connecting points
 ```
 rjj pl
 ```
+
+[<img src="https://raw.githubusercontent.com/calcuis/rjj/master/demo1.jpg" width="350" height="280">](https://github.com/calcuis/rjj/blob/main/demo1.jpg)
+[<img src="https://raw.githubusercontent.com/calcuis/rjj/master/demo2.jpg" width="350" height="280">](https://github.com/calcuis/rjj/blob/main/demo2.jpg)
+
 #### liner
 draw a line graph 📉
 ```
@@ -243,3 +247,4 @@ bake me a donut 🍩
 ```
 rjj donut
 ```
+[<img src="https://raw.githubusercontent.com/calcuis/rjj/master/demo4.jpg" width="350" height="280">](https://github.com/calcuis/rjj/blob/main/demo4.jpg)
