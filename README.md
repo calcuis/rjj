@@ -133,7 +133,7 @@ compare group across time/paired-feature
 ```
 rjj pt
 ```
-*select first column as pre-test data; second column as post-test data*
+*i.e., select first column as post-test data; second column as pre-test data*
 #### independent-sample t-test
 compare two independent groups; able to opt to calculate it based on equal variance assumed or not assumed
 ```
