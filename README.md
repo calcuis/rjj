@@ -199,7 +199,7 @@ run reliability analysis for a hypothetical construct; cheers! 🍻
 ```
 rjj rt
 ```
-*Cronach alpha if item deleted is provided as well; make your item screening task easy*
+*Cronbach alpha if item deleted is provided as well; make your item screening task easy*
 ### regression analysis
 make prediction(s) about the future 🎯
 ```
