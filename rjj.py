@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.4.8"
+__version__="0.4.9"
 
 import argparse, os, json, csv, glob, hashlib, random, math
 from collections import defaultdict
@@ -71,6 +71,27 @@ def clean_data(df, columns):
     df = df.dropna()
     return df
 
+def one_sample_t_test_v2():
+    file_path = select_csv_file_gui()
+    df = pd.read_csv(file_path)
+    selected_column = select_column(df)
+    sample_data = df[selected_column].dropna()
+    population_mean = float(input("Enter the population mean (µ): "))
+    t_statistic, p_value = st.ttest_1samp(sample_data, population_mean)
+    sample_mean = np.mean(sample_data)
+    sample_std = np.std(sample_data, ddof=1)
+    d_f = len(sample_data) - 1
+    cohen_d = (sample_mean - population_mean) / sample_std
+    print("\nResults of the One-Sample t-Test:")
+    print(f"Sample Mean: {sample_mean:.4f}")
+    print(f"Sample Standard Deviation (SD): {sample_std:.4f}")
+    print(f"t({d_f}) = {t_statistic:.4f}")
+    print(f"p-value = {p_value:.4f}")
+    print(f"Effect Size (Cohen's d): {cohen_d:.4f}")
+    if p_value < 0.05: p = "p < .05"
+    else: p = f"p = {p_value:.3f}"
+    print(f"\nReport format:\n{sample_mean:.2f} ± {sample_std:.3f}; t({d_f}) = {t_statistic:.3f}, {p}, d = {cohen_d:.2f}")
+
 def regression_analysis(df, dependent_var, predictors):
     import statsmodels.api as sm
     X = df[predictors]
@@ -130,7 +151,7 @@ def reliability_test():
         print(f"Data loaded successfully from {file_path}")
     else:
         print("No file selected.")
-        exit()
+        return
     num_items = int(input("Enter the number of items (columns) within the construct: "))
     selected_columns = []
     print("Available columns:", df.columns.tolist())
@@ -140,10 +161,13 @@ def reliability_test():
             print(f"{col_name} is not a valid column name. Please choose from: {df.columns.tolist()}")
             col_name = input(f"Select column {i + 1}: ")
         selected_columns.append(col_name)
-    df_selected = df[selected_columns]
-    overall_alpha = cronbach_alpha(df_selected)
+    df_clean = clean_data(df, selected_columns)
+    if df_clean.empty:
+        print("No data left after cleaning. Exiting.")
+        return
+    overall_alpha = cronbach_alpha(df_clean)
     print(f"Cronbach's alpha for the selected items is: {overall_alpha}")
-    alphas_if_deleted = cronbach_alpha_if_deleted(df_selected)
+    alphas_if_deleted = cronbach_alpha_if_deleted(df_clean)
     print("\nCronbach's alpha if an item is deleted:")
     for item, alpha in alphas_if_deleted.items():
         print(f" - {item}: {alpha}")
@@ -1201,6 +1225,7 @@ def __init__():
     subparsers.add_parser('ca', help='run correlation analysis')
     subparsers.add_parser('ra', help='run regression analysis')
     subparsers.add_parser('rt', help='run reliability test')
+    subparsers.add_parser('et', help='run one-sample t-test with effect size')
     subparsers.add_parser('pp', help='run power analysis for paired-sample t-test')
     subparsers.add_parser('pi', help='run power analysis for independent-sample t-test')
     subparsers.add_parser('po', help='run power analysis for one-way anova')
@@ -1300,6 +1325,8 @@ def __init__():
         regression()
     elif args.subcommand == 'rt':
         reliability_test()
+    elif args.subcommand == 'et':
+        one_sample_t_test_v2()
     elif args.subcommand == 'pp':
         pa_pt()
     elif args.subcommand == 'pi':
