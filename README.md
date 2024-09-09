@@ -243,6 +243,10 @@ draw a bar chart 📊
 rjj bar
 ```
 *opt to assign label(s)* 🍻
+
+[<img src="https://raw.githubusercontent.com/calcuis/rjj/master/demo3b.jpg" width="350" height="280">](https://github.com/calcuis/rjj/blob/main/demo3b.jpg)
+[<img src="https://raw.githubusercontent.com/calcuis/rjj/master/demo3a.jpg" width="350" height="280">](https://github.com/calcuis/rjj/blob/main/demo3a.jpg)
+
 #### boxplot
 draw one boxplot 📦
 ```
@@ -263,4 +267,5 @@ bake me a donut 🍩
 ```
 rjj donut
 ```
+[<img src="https://raw.githubusercontent.com/calcuis/rjj/master/demo5.jpg" width="350" height="280">](https://github.com/calcuis/rjj/blob/main/demo5.jpg)
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/demo4.jpg" width="350" height="280">](https://github.com/calcuis/rjj/blob/main/demo4.jpg)
