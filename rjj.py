@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.5.2"
+__version__="0.5.3"
 
 import argparse, os, json, csv, glob, hashlib, random, math
 from collections import defaultdict
@@ -70,6 +70,46 @@ def clean_data(df, columns):
     df = df[columns].replace([np.inf, -np.inf], np.nan)
     df = df.dropna()
     return df
+
+def one_way_anova_v2():
+    file_path = select_csv_file_gui()
+    data = pd.read_csv(file_path)
+    print("\n* Reminder: 1st column should be GROUP variable *\n")
+    group_column, value_column = select_columns(data)
+    groups = data.groupby(group_column)[value_column]
+    group_means = groups.mean()
+    group_sizes = groups.size()
+    group_stds = groups.std(ddof=1)
+    f_statistic, p_value = st.f_oneway(*[group for name, group in groups])
+    df_between = len(groups) - 1
+    df_within = len(data) - len(groups)
+    overall_mean = data[value_column].mean()
+    ss_between = sum(size * (mean - overall_mean) ** 2 for size, mean in zip(group_sizes, group_means))
+    ss_total = sum((value - overall_mean) ** 2 for value in data[value_column])
+    eta_squared = ss_between / ss_total
+    cohen_f = np.sqrt(eta_squared / (1 - eta_squared))
+    alpha = 0.05
+    from statsmodels.stats.power import FTestAnovaPower
+    power_analysis = FTestAnovaPower()
+    power = power_analysis.power(effect_size=cohen_f, 
+                                 k_groups=len(groups), 
+                                 nobs=len(data), 
+                                 alpha=alpha)
+    print("\nResults of the One-Way ANOVA:")
+    for group_name, mean, std in zip(group_means.index, group_means, group_stds):
+        print(f"Group: {group_name}, Mean: {mean:.4f}, Standard Deviation: {std:.4f}")
+    print(f"F({df_between}, {df_within}) = {f_statistic:.4f}")
+    print(f"p-value = {p_value:.4f}")
+    print(f"Effect Size (Cohen's f): {cohen_f:.4f}")
+    print(f"Power (1-β): {power:.4f}")
+    print(f"\nEffect Size (Eta Squared)  : {eta_squared:.4f}")
+    print(f"Sum of Squares Between Groups: {ss_between:.4f}")
+    print(f"Sum of Squares Within Groups : {ss_total-ss_between:.4f}")
+    print(f"Sum of Squares Total         : {ss_total:.4f}")
+    if p_value <= 0.01: p = "p < .01"
+    elif p_value < 0.05 and p_value > 0.01: p = "p < .05"
+    else: p = f"p = {p_value:.3f}"
+    print(f"\nJournal/report format:\nF({df_between}, {df_within}) = {f_statistic:.3f}, {p}, η^2 = {eta_squared:.2f}")
 
 def independent_sample_t_test_v2():
     file_path = select_csv_file_gui()
@@ -1299,6 +1339,7 @@ def __init__():
     subparsers.add_parser('et', help='evaluate effect size for one-sample t-test')
     subparsers.add_parser('ep', help='evaluate effect size for paired-sample t-test')
     subparsers.add_parser('ei', help='evaluate effect size for independent-sample t-test')
+    subparsers.add_parser('eo', help='evaluate effect size for one-way anova')
     subparsers.add_parser('pp', help='estimate sample size for paired-sample t-test')
     subparsers.add_parser('pi', help='estimate sample size for independent-sample t-test')
     subparsers.add_parser('po', help='estimate sample size for one-way anova')
@@ -1404,6 +1445,8 @@ def __init__():
         paired_sample_t_test_v2()
     elif args.subcommand == 'ei':
         independent_sample_t_test_v2()
+    elif args.subcommand == 'eo':
+        one_way_anova_v2()
     elif args.subcommand == 'pp':
         pa_pt()
     elif args.subcommand == 'pi':
