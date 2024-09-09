@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.5.1-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.5.2-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -203,6 +203,10 @@ rjj et
 evaluate effect size and power for `paired-sample t-test`
 ```
 rjj ep
+```
+evaluate effect size and power for `independent-sample t-test`
+```
+rjj ei
 ```
 ### reliability test
 run reliability analysis for a hypothetical construct; cheers! 🍻
