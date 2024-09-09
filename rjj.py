@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.5.1"
+__version__="0.5.2"
 
 import argparse, os, json, csv, glob, hashlib, random, math
 from collections import defaultdict
@@ -71,39 +71,59 @@ def clean_data(df, columns):
     df = df.dropna()
     return df
 
+def independent_sample_t_test_v2():
+    file_path = select_csv_file_gui()
+    df = pd.read_csv(file_path)
+    col1, col2 = select_columns(df)
+    group_1 = df[col1].dropna()
+    group_2 = df[col2].dropna()
+    mean_1 = np.mean(group_1)
+    std_1 = np.std(group_1, ddof=1)
+    mean_2 = np.mean(group_2)
+    std_2 = np.std(group_2, ddof=1)
+    t_statistic, p_value = st.ttest_ind(group_1, group_2, equal_var=False)
+    d_f = len(group_1) + len(group_2) - 2
+    pooled_std = np.sqrt(((len(group_1) - 1) * std_1 ** 2 + (len(group_2) - 1) * std_2 ** 2) / d_f)
+    cohen_d = (mean_1 - mean_2) / pooled_std
+    alpha = 0.05
+    from statsmodels.stats.power import TTestIndPower
+    power_analysis = TTestIndPower()
+    power = power_analysis.power(effect_size=cohen_d, nobs1=len(group_1), ratio=len(group_2)/len(group_1), alpha=alpha, alternative='two-sided')
+    print("\nResults of the Independent-Sample t-Test:")
+    print(f"Mean (Group 1): {mean_1:.4f}")
+    print(f"Standard Deviation (Group 1): {std_1:.4f}")
+    print(f"Mean (Group 2): {mean_2:.4f}")
+    print(f"Standard Deviation (Group 2): {std_2:.4f}")
+    print(f"t({d_f}) = {t_statistic:.4f}")
+    print(f"p-value = {p_value:.4f}")
+    print(f"Effect Size (Cohen's d): {cohen_d:.4f}")
+    print(f"Power (1-β): {power:.4f}")
+    if mean_1 > mean_2: cp = ">"
+    elif mean_1 < mean_2: cp = "<"
+    else: cp = "="
+    if p_value <= 0.01: p = "p < .01"
+    elif p_value < 0.05 and p_value > 0.01: p = "p < .05"
+    else: p = f"p = {p_value:.3f}"
+    print(f"\nJournal/report format:\n{mean_1:.2f}(±{std_1:.3f}) {cp} {mean_2:.2f}(±{std_2:.3f}); t({d_f}) = {t_statistic:.3f}, {p}, d = {cohen_d:.2f}")
+
 def paired_sample_t_test_v2():
     file_path = select_csv_file_gui()
     df = pd.read_csv(file_path)
-    # # Step 3: Display the columns and let the user select two for the paired t-test
-    # print("\nColumns in the selected CSV file:")
-    # print(df.columns.tolist())
-    # column_name_1 = input("Select the first column for the paired t-test: ")
-    # column_name_2 = input("Select the second column for the paired t-test: ")
-    # # Extract the selected columns' data
-    # sample_1 = df[column_name_1].dropna()
-    # sample_2 = df[column_name_2].dropna()
-    # modified
     col1, col2 = select_columns(df)
     sample_1 = df[col1].dropna()
     sample_2 = df[col2].dropna()
-    # Ensure the samples are of the same length
     if len(sample_1) != len(sample_2):
         raise ValueError("The two columns must have the same number of observations.")
-    # Calculate the difference between the two samples
     diff = sample_1 - sample_2
-    # Step 4: Calculate the sample mean, standard deviation, t-statistic, p-value, effect size, and power
     mean_diff = np.mean(diff)
     std_diff = np.std(diff, ddof=1)
-    # t_statistic, p_value = stats.ttest_rel(sample_1, sample_2)
     t_statistic, p_value = st.ttest_rel(sample_1, sample_2)
     d_f = len(diff) - 1
     cohen_d = mean_diff / std_diff
-    # Power calculation
-    alpha = 0.05  # Common alpha value for hypothesis testing
+    alpha = 0.05
     from statsmodels.stats.power import TTestPower
     power_analysis = TTestPower()
     power = power_analysis.power(effect_size=cohen_d, nobs=len(diff), alpha=alpha, alternative='two-sided')
-    # Step 5: Print the results
     print("\nResults of the Paired-Sample t-Test:")
     print(f"Mean of Differences: {mean_diff:.4f}")
     print(f"Standard Deviation of Differences (SD): {std_diff:.4f}")
@@ -114,7 +134,7 @@ def paired_sample_t_test_v2():
     if p_value <= 0.01: p = "p < .01"
     elif p_value < 0.05 and p_value > 0.01: p = "p < .05"
     else: p = f"p = {p_value:.3f}"
-    print(f"\nPublication/report format:\nΔ {mean_diff:.2f} ± {std_diff:.3f}; t({d_f}) = {t_statistic:.3f}, {p}, d = {cohen_d:.2f}")
+    print(f"\nJournal/report format:\nΔ {mean_diff:.2f} ± {std_diff:.3f}; t({d_f}) = {t_statistic:.3f}, {p}, d = {cohen_d:.2f}")
 
 def one_sample_t_test_v2():
     file_path = select_csv_file_gui()
@@ -141,7 +161,7 @@ def one_sample_t_test_v2():
     if p_value <= 0.01: p = "p < .01"
     elif p_value < 0.05 and p_value > 0.01: p = "p < .05"
     else: p = f"p = {p_value:.3f}"
-    print(f"\nPublication/report format:\n{sample_mean:.2f} ± {sample_std:.3f}; t({d_f}) = {t_statistic:.3f}, {p}, d = {cohen_d:.2f}")
+    print(f"\nJournal/report format:\n{sample_mean:.2f} ± {sample_std:.3f}; t({d_f}) = {t_statistic:.3f}, {p}, d = {cohen_d:.2f}")
 
 def regression_analysis(df, dependent_var, predictors):
     import statsmodels.api as sm
@@ -1276,8 +1296,9 @@ def __init__():
     subparsers.add_parser('ca', help='run correlation analysis')
     subparsers.add_parser('ra', help='run regression analysis')
     subparsers.add_parser('rt', help='run reliability test')
-    subparsers.add_parser('et', help='run one-sample t-test with effect size')
-    subparsers.add_parser('ep', help='run paired-sample t-test with effect size')
+    subparsers.add_parser('et', help='evaluate effect size for one-sample t-test')
+    subparsers.add_parser('ep', help='evaluate effect size for paired-sample t-test')
+    subparsers.add_parser('ei', help='evaluate effect size for independent-sample t-test')
     subparsers.add_parser('pp', help='estimate sample size for paired-sample t-test')
     subparsers.add_parser('pi', help='estimate sample size for independent-sample t-test')
     subparsers.add_parser('po', help='estimate sample size for one-way anova')
@@ -1381,6 +1402,8 @@ def __init__():
         one_sample_t_test_v2()
     elif args.subcommand == 'ep':
         paired_sample_t_test_v2()
+    elif args.subcommand == 'ei':
+        independent_sample_t_test_v2()
     elif args.subcommand == 'pp':
         pa_pt()
     elif args.subcommand == 'pi':
