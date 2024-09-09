@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.5.0"
+__version__="0.5.1"
 
 import argparse, os, json, csv, glob, hashlib, random, math
 from collections import defaultdict
@@ -70,6 +70,51 @@ def clean_data(df, columns):
     df = df[columns].replace([np.inf, -np.inf], np.nan)
     df = df.dropna()
     return df
+
+def paired_sample_t_test_v2():
+    file_path = select_csv_file_gui()
+    df = pd.read_csv(file_path)
+    # # Step 3: Display the columns and let the user select two for the paired t-test
+    # print("\nColumns in the selected CSV file:")
+    # print(df.columns.tolist())
+    # column_name_1 = input("Select the first column for the paired t-test: ")
+    # column_name_2 = input("Select the second column for the paired t-test: ")
+    # # Extract the selected columns' data
+    # sample_1 = df[column_name_1].dropna()
+    # sample_2 = df[column_name_2].dropna()
+    # modified
+    col1, col2 = select_columns(df)
+    sample_1 = df[col1].dropna()
+    sample_2 = df[col2].dropna()
+    # Ensure the samples are of the same length
+    if len(sample_1) != len(sample_2):
+        raise ValueError("The two columns must have the same number of observations.")
+    # Calculate the difference between the two samples
+    diff = sample_1 - sample_2
+    # Step 4: Calculate the sample mean, standard deviation, t-statistic, p-value, effect size, and power
+    mean_diff = np.mean(diff)
+    std_diff = np.std(diff, ddof=1)
+    # t_statistic, p_value = stats.ttest_rel(sample_1, sample_2)
+    t_statistic, p_value = st.ttest_rel(sample_1, sample_2)
+    d_f = len(diff) - 1
+    cohen_d = mean_diff / std_diff
+    # Power calculation
+    alpha = 0.05  # Common alpha value for hypothesis testing
+    from statsmodels.stats.power import TTestPower
+    power_analysis = TTestPower()
+    power = power_analysis.power(effect_size=cohen_d, nobs=len(diff), alpha=alpha, alternative='two-sided')
+    # Step 5: Print the results
+    print("\nResults of the Paired-Sample t-Test:")
+    print(f"Mean of Differences: {mean_diff:.4f}")
+    print(f"Standard Deviation of Differences (SD): {std_diff:.4f}")
+    print(f"t({d_f}) = {t_statistic:.4f}")
+    print(f"p-value = {p_value:.4f}")
+    print(f"Effect Size (Cohen's d): {cohen_d:.4f}")
+    print(f"Power (1-β): {power:.4f}")
+    if p_value <= 0.01: p = "p < .01"
+    elif p_value < 0.05 and p_value > 0.01: p = "p < .05"
+    else: p = f"p = {p_value:.3f}"
+    print(f"\nPublication/report format:\nΔ {mean_diff:.2f} ± {std_diff:.3f}; t({d_f}) = {t_statistic:.3f}, {p}, d = {cohen_d:.2f}")
 
 def one_sample_t_test_v2():
     file_path = select_csv_file_gui()
@@ -636,7 +681,7 @@ def paired_sample_t():
         return
     selected_file = select_csv_file(csv_files)
     df = pd.read_csv(selected_file)
-    print("\n* 1st column: PRE-test data; 2nd column: POST-test data *\n")
+    print("\n* 1st column: POST-test data; 2nd column: PRE-test data *\n")
     col1, col2 = select_columns(df)
     sample1 = df[col1].dropna()
     sample2 = df[col2].dropna()
@@ -1232,11 +1277,12 @@ def __init__():
     subparsers.add_parser('ra', help='run regression analysis')
     subparsers.add_parser('rt', help='run reliability test')
     subparsers.add_parser('et', help='run one-sample t-test with effect size')
-    subparsers.add_parser('pp', help='run power analysis for paired-sample t-test')
-    subparsers.add_parser('pi', help='run power analysis for independent-sample t-test')
-    subparsers.add_parser('po', help='run power analysis for one-way anova')
-    subparsers.add_parser('pc', help='run power analysis for correlation')
-    subparsers.add_parser('pr', help='run power analysis for regression')
+    subparsers.add_parser('ep', help='run paired-sample t-test with effect size')
+    subparsers.add_parser('pp', help='estimate sample size for paired-sample t-test')
+    subparsers.add_parser('pi', help='estimate sample size for independent-sample t-test')
+    subparsers.add_parser('po', help='estimate sample size for one-way anova')
+    subparsers.add_parser('pc', help='estimate sample size for correlation')
+    subparsers.add_parser('pr', help='estimate sample size for regression')
     subparsers.add_parser('n', help='give descriptive statistics for a column')
     subparsers.add_parser('g', help='give descriptive statistics by group(s)')
     subparsers.add_parser('dir', help='create folder(s)')
@@ -1333,6 +1379,8 @@ def __init__():
         reliability_test()
     elif args.subcommand == 'et':
         one_sample_t_test_v2()
+    elif args.subcommand == 'ep':
+        paired_sample_t_test_v2()
     elif args.subcommand == 'pp':
         pa_pt()
     elif args.subcommand == 'pi':
