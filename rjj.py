@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.5.3"
+__version__="0.5.4"
 
 import argparse, os, json, csv, glob, hashlib, random, math
 from collections import defaultdict
@@ -102,7 +102,8 @@ def one_way_anova_v2():
     print(f"p-value = {p_value:.4f}")
     print(f"Effect Size (Cohen's f): {cohen_f:.4f}")
     print(f"Power (1-β): {power:.4f}")
-    print(f"\nEffect Size (Eta Squared)  : {eta_squared:.4f}")
+    print("\nEffect Size calculation based on η^2:")
+    print(f"Effect Size (Eta Squared)    : {eta_squared:.4f}")
     print(f"Sum of Squares Between Groups: {ss_between:.4f}")
     print(f"Sum of Squares Within Groups : {ss_total-ss_between:.4f}")
     print(f"Sum of Squares Total         : {ss_total:.4f}")
@@ -110,6 +111,12 @@ def one_way_anova_v2():
     elif p_value < 0.05 and p_value > 0.01: p = "p < .05"
     else: p = f"p = {p_value:.3f}"
     print(f"\nJournal/report format:\nF({df_between}, {df_within}) = {f_statistic:.3f}, {p}, η^2 = {eta_squared:.2f}")
+    from statsmodels.stats.multicomp import pairwise_tukeyhsd
+    tukey = pairwise_tukeyhsd(endog=data[value_column], 
+                              groups=data[group_column], 
+                              alpha=alpha)
+    print("\nTukey's HSD Test Results:")
+    print(tukey)
 
 def independent_sample_t_test_v2():
     file_path = select_csv_file_gui()
