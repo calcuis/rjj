@@ -1,13 +1,16 @@
 # !/usr/bin/env python3
 
-__version__="0.5.4"
+__version__="0.5.5"
 
-import argparse, os, json, csv, glob, hashlib, random, math
+import argparse, os, json, csv, glob, hashlib, warnings, random, math
+from sklearn.base import BaseEstimator, TransformerMixin
 from collections import defaultdict
 from datetime import datetime
+from typing import Tuple
 import scipy.stats as st
-import pandas as pd
+import scipy as sp
 import numpy as np
+import pandas as pd
 
 def list_csv_files():
     return [f for f in os.listdir() if f.endswith('.csv')]
@@ -1314,6 +1317,821 @@ def xjoint():
     else:
         print(f"No excel files are available in the current directory.")
 
+POSSIBLE_SVDS = ["randomized", "lapack"]
+POSSIBLE_IMPUTATIONS = ["mean", "median", "drop"]
+POSSIBLE_METHODS = ["ml", "mle", "uls", "minres", "principal"]
+ORTHOGONAL_ROTATIONS = ["varimax", "oblimax", "quartimax", "equamax", "geomin_ort"]
+OBLIQUE_ROTATIONS = ["promax", "oblimin", "quartimin", "geomin_obl"]
+POSSIBLE_ROTATIONS = ORTHOGONAL_ROTATIONS + OBLIQUE_ROTATIONS
+
+class Rotator(BaseEstimator):
+    def __init__(
+        self,
+        method="varimax",
+        normalize=True,
+        power=4,
+        kappa=0,
+        gamma=0,
+        delta=0.01,
+        max_iter=500,
+        tol=1e-5,
+    ):
+        self.method = method
+        self.normalize = normalize
+        self.power = power
+        self.kappa = kappa
+        self.gamma = gamma
+        self.delta = delta
+        self.max_iter = max_iter
+        self.tol = tol
+        self.loadings_ = None
+        self.rotation_ = None
+        self.phi_ = None
+
+    def _oblimax_obj(self, loadings):
+        gradient = -(
+            4 * loadings**3 / (np.sum(loadings**4))
+            - 4 * loadings / (np.sum(loadings**2))
+        )
+        criterion = np.log(np.sum(loadings**4)) - 2 * np.log(np.sum(loadings**2))
+        return {"grad": gradient, "criterion": criterion}
+
+    def _quartimax_obj(self, loadings):
+        gradient = -(loadings**3)
+        criterion = -np.sum(np.diag(np.dot((loadings**2).T, loadings**2))) / 4
+        return {"grad": gradient, "criterion": criterion}
+
+    def _oblimin_obj(self, loadings):
+        X = np.dot(loadings**2, np.eye(loadings.shape[1]) != 1)
+        if self.gamma != 0:
+            p = loadings.shape[0]
+            X = np.diag(np.full(1, p)) - np.dot(np.zeros((p, p)), X)
+        gradient = loadings * X
+        criterion = np.sum(loadings**2 * X) / 4
+        return {"grad": gradient, "criterion": criterion}
+
+    def _quartimin_obj(self, loadings):
+        X = np.dot(loadings**2, np.eye(loadings.shape[1]) != 1)
+        gradient = loadings * X
+        criterion = np.sum(loadings**2 * X) / 4
+        return {"grad": gradient, "criterion": criterion}
+
+    def _equamax_obj(self, loadings):
+        p, k = loadings.shape
+        N = np.ones(k) - np.eye(k)
+        M = np.ones(p) - np.eye(p)
+        loadings_squared = loadings**2
+        f1 = (
+            (1 - self.kappa)
+            * np.sum(np.diag(np.dot(loadings_squared.T, np.dot(loadings_squared, N))))
+            / 4
+        )
+        f2 = (
+            self.kappa
+            * np.sum(np.diag(np.dot(loadings_squared.T, np.dot(M, loadings_squared))))
+            / 4
+        )
+        gradient = (1 - self.kappa) * loadings * np.dot(
+            loadings_squared, N
+        ) + self.kappa * loadings * np.dot(M, loadings_squared)
+        criterion = f1 + f2
+        return {"grad": gradient, "criterion": criterion}
+
+    def _geomin_obj(self, loadings):
+        p, k = loadings.shape
+        loadings2 = loadings**2 + self.delta
+        pro = np.exp(np.log(loadings2).sum(1) / k)
+        rep = np.repeat(pro, k, axis=0).reshape(p, k)
+        gradient = (2 / k) * (loadings / loadings2) * rep
+        criterion = np.sum(pro)
+        return {"grad": gradient, "criterion": criterion}
+
+    def _oblique(self, loadings, method):
+        if method == "oblimin":
+            objective = self._oblimin_obj
+        elif method == "quartimin":
+            objective = self._quartimin_obj
+        elif method == "geomin_obl":
+            objective = self._geomin_obj
+        _, n_cols = loadings.shape
+        rotation_matrix = np.eye(n_cols)
+        alpha = 1
+        rotation_matrix_inv = np.linalg.inv(rotation_matrix)
+        new_loadings = np.dot(loadings, rotation_matrix_inv.T)
+        obj = objective(new_loadings)
+        gradient = -np.dot(new_loadings.T, np.dot(obj["grad"], rotation_matrix_inv)).T
+        criterion = obj["criterion"]
+        obj_t = objective(new_loadings)
+        for _ in range(0, self.max_iter + 1):
+            gradient_new = gradient - np.dot(
+                rotation_matrix,
+                np.diag(np.dot(np.ones(gradient.shape[0]), rotation_matrix * gradient)),
+            )
+            s = np.sqrt(np.sum(np.diag(np.dot(gradient_new.T, gradient_new))))
+            if s < self.tol:
+                break
+            alpha = 2 * alpha
+            for _ in range(0, 11):
+                X = rotation_matrix - alpha * gradient_new
+                v = 1 / np.sqrt(np.dot(np.ones(X.shape[0]), X**2))
+                new_rotation_matrix = np.dot(X, np.diag(v))
+                new_loadings = np.dot(loadings, np.linalg.inv(new_rotation_matrix).T)
+                obj_t = objective(new_loadings)
+                improvement = criterion - obj_t["criterion"]
+                if improvement > 0.5 * s**2 * alpha:
+                    break
+                alpha = alpha / 2
+            rotation_matrix = new_rotation_matrix
+            criterion = obj_t["criterion"]
+            gradient = -np.dot(
+                np.dot(new_loadings.T, obj_t["grad"]),
+                np.linalg.inv(new_rotation_matrix),
+            ).T
+        phi = np.dot(rotation_matrix.T, rotation_matrix)
+        loadings = new_loadings.copy()
+        return loadings, rotation_matrix, phi
+
+    def _orthogonal(self, loadings, method):
+        if method == "oblimax":
+            objective = self._oblimax_obj
+        elif method == "quartimax":
+            objective = self._quartimax_obj
+        elif method == "equamax":
+            objective = self._equamax_obj
+        elif method == "geomin_ort":
+            objective = self._geomin_obj
+        arr = loadings.copy()
+        _, n_cols = arr.shape
+        rotation_matrix = np.eye(n_cols)
+        alpha = 1
+        new_loadings = np.dot(arr, rotation_matrix)
+        obj = objective(new_loadings)
+        gradient = np.dot(arr.T, obj["grad"])
+        criterion = obj["criterion"]
+        obj_t = objective(new_loadings)
+        for _ in range(0, self.max_iter + 1):
+            M = np.dot(rotation_matrix.T, gradient)
+            S = (M + M.T) / 2
+            gradient_new = gradient - np.dot(rotation_matrix, S)
+            s = np.sqrt(np.sum(np.diag(np.dot(gradient_new.T, gradient_new))))
+            if s < self.tol:
+                break
+            alpha = 2 * alpha
+            for _ in range(0, 11):
+                X = rotation_matrix - alpha * gradient_new
+                U, _, V = np.linalg.svd(X)
+                new_rotation_matrix = np.dot(U, V)
+                new_loadings = np.dot(arr, new_rotation_matrix)
+                obj_t = objective(new_loadings)
+                if obj_t["criterion"] < (criterion - 0.5 * s**2 * alpha):
+                    break
+                alpha = alpha / 2
+            rotation_matrix = new_rotation_matrix
+            criterion = obj_t["criterion"]
+            gradient = np.dot(arr.T, obj_t["grad"])
+        loadings = new_loadings.copy()
+        return loadings, rotation_matrix
+
+    def _varimax(self, loadings):
+        X = loadings.copy()
+        n_rows, n_cols = X.shape
+        if n_cols < 2:
+            return X
+        if self.normalize:
+            normalized_mtx = np.apply_along_axis(
+                lambda x: np.sqrt(np.sum(x**2)), 1, X.copy()
+            )
+            X = (X.T / normalized_mtx).T
+        rotation_mtx = np.eye(n_cols)
+        d = 0
+        for _ in range(self.max_iter):
+            old_d = d
+            basis = np.dot(X, rotation_mtx)
+            diagonal = np.diag(np.squeeze(np.repeat(1, n_rows).dot(basis**2)))
+            transformed = X.T.dot(basis**3 - basis.dot(diagonal) / n_rows)
+            U, S, V = np.linalg.svd(transformed)
+            rotation_mtx = np.dot(U, V)
+            d = np.sum(S)
+            if d < old_d * (1 + self.tol):
+                break
+        X = np.dot(X, rotation_mtx)
+        if self.normalize:
+            X = X.T * normalized_mtx
+        else:
+            X = X.T
+        loadings = X.T.copy()
+        return loadings, rotation_mtx
+
+    def _promax(self, loadings):
+        X = loadings.copy()
+        _, n_cols = X.shape
+        if n_cols < 2:
+            return X
+        if self.normalize:
+            array = X.copy()
+            h2 = np.diag(np.dot(array, array.T))
+            h2 = np.reshape(h2, (h2.shape[0], 1))
+            weights = array / np.sqrt(h2)
+        else:
+            weights = X.copy()
+        X, rotation_mtx = self._varimax(weights)
+        Y = X * np.abs(X) ** (self.power - 1)
+        coef = np.dot(np.linalg.inv(np.dot(X.T, X)), np.dot(X.T, Y))
+        try:
+            diag_inv = np.diag(sp.linalg.inv(np.dot(coef.T, coef)))
+        except np.linalg.LinAlgError:
+            diag_inv = np.diag(sp.linalg.pinv(np.dot(coef.T, coef)))
+        coef = np.dot(coef, np.diag(np.sqrt(diag_inv)))
+        z = np.dot(X, coef)
+        if self.normalize:
+            z = z * np.sqrt(h2)
+        rotation_mtx = np.dot(rotation_mtx, coef)
+        coef_inv = np.linalg.inv(coef)
+        phi = np.dot(coef_inv, coef_inv.T)
+        loadings = z.copy()
+        return loadings, rotation_mtx, phi
+
+    def fit(self, X, y=None):
+        self.fit_transform(X)
+        return self
+
+    def fit_transform(self, X, y=None):
+        phi = None
+        method = self.method.lower()
+        if method == "varimax":
+            (new_loadings, new_rotation_mtx) = self._varimax(X)
+        elif method == "promax":
+            (new_loadings, new_rotation_mtx, phi) = self._promax(X)
+        elif method in OBLIQUE_ROTATIONS:
+            (new_loadings, new_rotation_mtx, phi) = self._oblique(X, method)
+        elif method in ORTHOGONAL_ROTATIONS:
+            (new_loadings, new_rotation_mtx) = self._orthogonal(X, method)
+        else:
+            raise ValueError(
+                "The value for `method` must be one of the "
+                "following: {}.".format(", ".join(POSSIBLE_ROTATIONS))
+            )
+        (self.loadings_, self.rotation_, self.phi_) = (
+            new_loadings,
+            new_rotation_mtx,
+            phi,
+        )
+        return self.loadings_
+
+def inv_chol(x, logdet=False):
+    from scipy.linalg import cholesky
+    chol = cholesky(x, lower=True)
+    chol_inv = np.linalg.inv(chol)
+    chol_inv = np.dot(chol_inv.T, chol_inv)
+    chol_logdet = None
+    if logdet:
+        chol_diag = np.diag(chol)
+        chol_logdet = np.sum(np.log(chol_diag * chol_diag))
+    return chol_inv, chol_logdet
+
+def cov(x, ddof=0):
+    r = np.cov(x, rowvar=False, ddof=ddof)
+    return r
+
+def corr(x):
+    x = (x - np.mean(x, axis=0)) / np.std(x, axis=0, ddof=0)
+    r = cov(x)
+    return r
+
+def apply_impute_nan(x, how="mean"):
+    if how == "mean":
+        x[np.isnan(x)] = np.nanmean(x)
+    elif how == "median":
+        x[np.isnan(x)] = np.nanmedian(x)
+    return x
+
+def impute_values(x, how="mean"):
+    if how in ["mean", "median"]:
+        x = np.apply_along_axis(apply_impute_nan, 0, x, how=how)
+    elif how == "drop":
+        x = x[~np.isnan(x).any(1), :].copy()
+    return x
+
+def smc(corr_mtx, sort=False):
+    corr_inv = np.linalg.inv(corr_mtx)
+    smc = 1 - 1 / np.diag(corr_inv)
+    if sort:
+        smc = np.sort(smc)
+    return smc
+
+def covariance_to_correlation(m):
+    numrows, numcols = m.shape
+    if not numrows == numcols:
+        raise ValueError("Input matrix must be square")
+    Is = np.sqrt(1 / np.diag(m))
+    retval = Is * m * np.repeat(Is, numrows).reshape(numrows, numrows)
+    np.fill_diagonal(retval, 1.0)
+    return retval
+
+def partial_correlations(x):
+    numrows, numcols = x.shape
+    x_cov = cov(x, ddof=1)
+    empty_array = np.empty((numcols, numcols))
+    empty_array[:] = np.nan
+    if numcols > numrows:
+        icvx = empty_array
+    else:
+        try:
+            assert np.linalg.det(x_cov) > np.finfo(np.float32).eps
+            icvx = np.linalg.inv(x_cov)
+        except AssertionError:
+            icvx = np.linalg.pinv(x_cov)
+            warnings.warn(
+                "The inverse of the variance-covariance matrix "
+                "was calculated using the Moore-Penrose generalized "
+                "matrix inversion, due to its determinant being at "
+                "or very close to zero."
+            )
+        except np.linalg.LinAlgError:
+            icvx = empty_array
+    pcor = -1 * covariance_to_correlation(icvx)
+    np.fill_diagonal(pcor, 1.0)
+    return pcor
+
+def unique_elements(seq):
+    seen = set()
+    return [x for x in seq if not (x in seen or seen.add(x))]
+
+def fill_lower_diag(x):
+    x = np.array(x)
+    x = x if len(x.shape) == 1 else np.squeeze(x, axis=1)
+    n = int(np.sqrt(len(x) * 2)) + 1
+    out = np.zeros((n, n), dtype=float)
+    out[np.tri(n, dtype=bool, k=-1)] = x
+    return out
+
+def merge_variance_covariance(variances, covariances=None):
+    variances = (
+        variances if len(variances.shape) == 1 else np.squeeze(variances, axis=1)
+    )
+    if covariances is None:
+        variance_covariance = np.zeros((variances.shape[0], variances.shape[0]))
+    else:
+        variance_covariance = fill_lower_diag(covariances)
+        variance_covariance += variance_covariance.T
+    np.fill_diagonal(variance_covariance, variances)
+    return variance_covariance
+
+def get_first_idxs_from_values(x, eq=1, use_columns=True):
+    x = np.array(x)
+    if use_columns:
+        n = x.shape[1]
+        row_idx = [np.where(x[:, i] == eq)[0][0] for i in range(n)]
+        col_idx = list(range(n))
+    else:
+        n = x.shape[0]
+        col_idx = [np.where(x[i, :] == eq)[0][0] for i in range(n)]
+        row_idx = list(range(n))
+    return row_idx, col_idx
+
+def get_free_parameter_idxs(x, eq=1):
+    x[np.isnan(x)] = eq
+    x = x.flatten(order="F")
+    return np.where(x == eq)[0]
+
+def duplication_matrix(n=1):
+    if n < 1:
+        raise ValueError(
+            "The argument `n` must be a " "positive integer greater than 1."
+        )
+    dup = np.zeros((int(n * n), int(n * (n + 1) / 2)))
+    count = 0
+    for j in range(n):
+        dup[j * n + j, count + j] = 1
+        if j < n - 1:
+            for i in range(j + 1, n):
+                dup[j * n + i, count + i] = 1
+                dup[i * n + j, count + i] = 1
+        count += n - j - 1
+    return dup
+
+def duplication_matrix_pre_post(x):
+    assert x.shape[0] == x.shape[1]
+    n2 = x.shape[1]
+    n = int(np.sqrt(n2))
+    idx1 = get_symmetric_lower_idxs(n)
+    idx2 = get_symmetric_upper_idxs(n)
+    out = x[idx1, :] + x[idx2, :]
+    u = np.where([i in idx2 for i in idx1])[0]
+    out[u, :] = out[u, :] / 2.0
+    out = out[:, idx1] + out[:, idx2]
+    out[:, u] = out[:, u] / 2.0
+    return out
+
+def commutation_matrix(p, q):
+    identity = np.eye(p * q)
+    indices = np.arange(p * q).reshape((p, q), order="F")
+    return identity.take(indices.ravel(), axis=0)
+
+def get_symmetric_lower_idxs(n=1, diag=True):
+    rows = np.repeat(np.arange(n), n).reshape(n, n)
+    cols = rows.T
+    if diag:
+        return np.where((rows >= cols).T.flatten())[0]
+    return np.where((cols > rows).T.flatten())[0]
+
+def get_symmetric_upper_idxs(n=1, diag=True):
+    rows = np.repeat(np.arange(n), n).reshape(n, n)
+    cols = rows.T
+    temp = np.arange(n * n).reshape(n, n)
+    if diag:
+        return temp.T[(rows >= cols).T]
+    return temp.T[(cols > rows).T]
+
+def calculate_kmo(x):
+    partial_corr = partial_correlations(x)
+    x_corr = corr(x)
+    np.fill_diagonal(x_corr, 0)
+    np.fill_diagonal(partial_corr, 0)
+    partial_corr = partial_corr**2
+    x_corr = x_corr**2
+    partial_corr_sum = np.sum(partial_corr, axis=0)
+    corr_sum = np.sum(x_corr, axis=0)
+    kmo_per_item = corr_sum / (corr_sum + partial_corr_sum)
+    corr_sum_total = np.sum(x_corr)
+    partial_corr_sum_total = np.sum(partial_corr)
+    kmo_total = corr_sum_total / (corr_sum_total + partial_corr_sum_total)
+    return kmo_per_item, kmo_total
+
+def calculate_bartlett_sphericity(x):
+    n, p = x.shape
+    x_corr = corr(x)
+    corr_det = np.linalg.det(x_corr)
+    statistic = -np.log(corr_det) * (n - 1 - (2 * p + 5) / 6)
+    degrees_of_freedom = p * (p - 1) / 2
+    from scipy.stats import chi2
+    p_value = chi2.sf(statistic, degrees_of_freedom)
+    return statistic, degrees_of_freedom, p_value
+
+class FactorAnalyzor(BaseEstimator, TransformerMixin):
+    def __init__(
+        self,
+        n_factors=3,
+        rotation="promax",
+        method="minres",
+        use_smc=True,
+        is_corr_matrix=False,
+        bounds=(0.005, 1),
+        impute="median",
+        svd_method="randomized",
+        rotation_kwargs=None,
+    ):
+        self.n_factors = n_factors
+        self.rotation = rotation
+        self.method = method
+        self.use_smc = use_smc
+        self.bounds = bounds
+        self.impute = impute
+        self.is_corr_matrix = is_corr_matrix
+        self.svd_method = svd_method
+        self.rotation_kwargs = rotation_kwargs
+        self.mean_ = None
+        self.std_ = None
+        self.phi_ = None
+        self.structure_ = None
+        self.corr_ = None
+        self.loadings_ = None
+        self.rotation_matrix_ = None
+        self.weights_ = None
+
+    def _arg_checker(self):
+        self.rotation = (
+            self.rotation.lower() if isinstance(self.rotation, str) else self.rotation
+        )
+        if self.rotation not in POSSIBLE_ROTATIONS + [None]:
+            raise ValueError(
+                f"The rotation must be one of the following: {POSSIBLE_ROTATIONS + [None]}"
+            )
+        self.method = (
+            self.method.lower() if isinstance(self.method, str) else self.method
+        )
+        if self.method not in POSSIBLE_METHODS:
+            raise ValueError(
+                f"The method must be one of the following: {POSSIBLE_METHODS}"
+            )
+        self.impute = (
+            self.impute.lower() if isinstance(self.impute, str) else self.impute
+        )
+        if self.impute not in POSSIBLE_IMPUTATIONS:
+            raise ValueError(
+                f"The imputation must be one of the following: {POSSIBLE_IMPUTATIONS}"
+            )
+        self.svd_method = (
+            self.svd_method.lower()
+            if isinstance(self.svd_method, str)
+            else self.svd_method
+        )
+        if self.svd_method not in POSSIBLE_SVDS:
+            raise ValueError(
+                f"The SVD method must be one of the following: {POSSIBLE_SVDS}"
+            )
+        if self.method == "principal" and self.is_corr_matrix:
+            raise ValueError(
+                "The principal method is only implemented using "
+                "the full data set, not the correlation matrix."
+            )
+        self.rotation_kwargs = (
+            {} if self.rotation_kwargs is None else self.rotation_kwargs
+        )
+
+    @staticmethod
+    def _fit_uls_objective(psi, corr_mtx, n_factors):
+        np.fill_diagonal(corr_mtx, 1 - psi)
+        values, vectors = sp.linalg.eigh(corr_mtx)
+        values = values[::-1]
+        values = np.maximum(values, np.finfo(float).eps * 100)
+        values = values[:n_factors]
+        vectors = vectors[:, ::-1][:, :n_factors]
+        if n_factors > 1:
+            loadings = np.dot(vectors, np.diag(np.sqrt(values)))
+        else:
+            loadings = vectors * np.sqrt(values[0])
+        model = np.dot(loadings, loadings.T)
+        residual = (corr_mtx - model) ** 2
+        error = np.sum(residual)
+        return error
+
+    @staticmethod
+    def _normalize_uls(solution, corr_mtx, n_factors):
+        np.fill_diagonal(corr_mtx, 1 - solution)
+        values, vectors = np.linalg.eigh(corr_mtx)
+        values = values[::-1][:n_factors]
+        vectors = vectors[:, ::-1][:, :n_factors]
+        loadings = np.dot(vectors, np.diag(np.sqrt(np.maximum(values, 0))))
+        return loadings
+
+    @staticmethod
+    def _fit_ml_objective(psi, corr_mtx, n_factors):
+        sc = np.diag(1 / np.sqrt(psi))
+        sstar = np.dot(np.dot(sc, corr_mtx), sc)
+        values, _ = np.linalg.eigh(sstar)
+        values = values[::-1][n_factors:]
+        error = -(np.sum(np.log(values) - values) - n_factors + corr_mtx.shape[0])
+        return error
+
+    @staticmethod
+    def _normalize_ml(solution, corr_mtx, n_factors):
+        sc = np.diag(1 / np.sqrt(solution))
+        sstar = np.dot(np.dot(sc, corr_mtx), sc)
+        values, vectors = np.linalg.eigh(sstar)
+        values = values[::-1][:n_factors]
+        vectors = vectors[:, ::-1][:, :n_factors]
+        values = np.maximum(values - 1, 0)
+        loadings = np.dot(vectors, np.diag(np.sqrt(values)))
+        return np.dot(np.diag(np.sqrt(solution)), loadings)
+
+    def _fit_principal(self, X):
+        X = X.copy()
+        X = (X - X.mean(0)) / X.std(0)
+        nrows, ncols = X.shape
+        if nrows < ncols and self.n_factors >= nrows:
+            warnings.warn(
+                "The number of factors will be "
+                "constrained to min(n_samples, n_features)"
+                "={}.".format(min(nrows, ncols))
+            )
+        if self.svd_method == "randomized":
+            from sklearn.utils.extmath import randomized_svd
+            _, _, V = randomized_svd(X, self.n_factors, random_state=1234567890)
+        else:
+            _, _, V = np.linalg.svd(X, full_matrices=False)
+        corr_mtx = np.dot(X, V.T)
+        from scipy.stats import pearsonr
+        loadings = np.array([[pearsonr(x, c)[0] for c in corr_mtx.T] for x in X.T])
+        return loadings
+
+    def _fit_factor_analysis(self, corr_mtx):
+        if self.use_smc:
+            smc_mtx = smc(corr_mtx)
+            start = (np.diag(corr_mtx) - smc_mtx.T).squeeze()
+        else:
+            start = [0.5 for _ in range(corr_mtx.shape[0])]
+        if self.bounds is not None:
+            bounds = [self.bounds for _ in range(corr_mtx.shape[0])]
+        else:
+            bounds = self.bounds
+        if self.method == "ml" or self.method == "mle":
+            objective = self._fit_ml_objective
+        else:
+            objective = self._fit_uls_objective
+        from scipy.optimize import minimize
+        res = minimize(
+            objective,
+            start,
+            method="L-BFGS-B",
+            bounds=bounds,
+            options={"maxiter": 1000},
+            args=(corr_mtx, self.n_factors),
+        )
+        if not res.success:
+            warnings.warn(f"Failed to converge: {res.message}")
+        if self.method == "ml" or self.method == "mle":
+            loadings = self._normalize_ml(res.x, corr_mtx, self.n_factors)
+        else:
+            loadings = self._normalize_uls(res.x, corr_mtx, self.n_factors)
+        return loadings
+
+    def fit(self, X, y=None):
+        self._arg_checker()
+        if isinstance(X, pd.DataFrame):
+            X = X.copy().values
+        else:
+            X = X.copy()
+        from sklearn.utils import check_array
+        X = check_array(X, force_all_finite="allow-nan", estimator=self, copy=True)
+        if np.isnan(X).any() and not self.is_corr_matrix:
+            X = impute_values(X, how=self.impute)
+        if self.is_corr_matrix:
+            corr_mtx = X
+        else:
+            corr_mtx = corr(X)
+            self.std_ = np.std(X, axis=0)
+            self.mean_ = np.mean(X, axis=0)
+        self.corr_ = corr_mtx.copy()
+        if self.method == "principal":
+            loadings = self._fit_principal(X)
+        else:
+            loadings = self._fit_factor_analysis(corr_mtx)
+        phi = None
+        structure = None
+        rotation_mtx = None
+        if self.rotation is not None:
+            if loadings.shape[1] <= 1:
+                warnings.warn(
+                    "No rotation will be performed when "
+                    "the number of factors equals 1."
+                )
+            else:
+                if "method" in self.rotation_kwargs:
+                    warnings.warn(
+                        "You cannot pass a rotation method to "
+                        "`rotation_kwargs`. This will be ignored."
+                    )
+                    self.rotation_kwargs.pop("method")
+                rotator = Rotator(method=self.rotation, **self.rotation_kwargs)
+                loadings = rotator.fit_transform(loadings)
+                rotation_mtx = rotator.rotation_
+                phi = rotator.phi_
+                if self.rotation != "promax":
+                    rotation_mtx = np.linalg.inv(rotation_mtx).T
+        if self.n_factors > 1:
+            signs = np.sign(loadings.sum(0))
+            signs[(signs == 0)] = 1
+            loadings = np.dot(loadings, np.diag(signs))
+            if phi is not None:
+                phi = np.dot(np.dot(np.diag(signs), phi), np.diag(signs))
+                structure = (
+                    np.dot(loadings, phi)
+                    if self.rotation in OBLIQUE_ROTATIONS
+                    else None
+                )
+        if self.method != "principal":
+            variance = self._get_factor_variance(loadings)[0]
+            new_order = list(reversed(np.argsort(variance)))
+            loadings = loadings[:, new_order].copy()
+            if structure is not None:
+                structure = structure[:, new_order].copy()
+        self.phi_ = phi
+        self.structure_ = structure
+        self.loadings_ = loadings
+        self.rotation_matrix_ = rotation_mtx
+        return self
+
+    def transform(self, X):
+        if isinstance(X, pd.DataFrame):
+            X = X.copy().values
+        else:
+            X = X.copy()
+        from sklearn.utils import check_array
+        X = check_array(X, force_all_finite=True, estimator=self, copy=True)
+        from sklearn.utils.validation import check_is_fitted
+        check_is_fitted(self, "loadings_")
+        if self.mean_ is None or self.std_ is None:
+            warnings.warn(
+                "Could not find original mean and standard deviation; using"
+                "the mean and standard deviation from the current data set."
+            )
+            mean = np.mean(X, axis=0)
+            std = np.std(X, axis=0)
+        else:
+            mean = self.mean_
+            std = self.std_
+        X_scale = (X - mean) / std
+        if self.structure_ is not None:
+            structure = self.structure_
+        else:
+            structure = self.loadings_
+        try:
+            self.weights_ = np.linalg.solve(self.corr_, structure)
+        except Exception as error:
+            warnings.warn(
+                "Unable to calculate the factor score weights; "
+                "factor loadings used instead: {}".format(error)
+            )
+            self.weights_ = self.loadings_
+
+        scores = np.dot(X_scale, self.weights_)
+        return scores
+
+    def get_eigenvalues(self):
+        from sklearn.utils.validation import check_is_fitted
+        check_is_fitted(self, ["loadings_", "corr_"])
+        corr_mtx = self.corr_.copy()
+        e_values, _ = np.linalg.eigh(corr_mtx)
+        e_values = e_values[::-1]
+        communalities = self.get_communalities()
+        communalities = communalities.copy()
+        np.fill_diagonal(corr_mtx, communalities)
+        values, _ = np.linalg.eigh(corr_mtx)
+        values = values[::-1]
+        return e_values, values
+
+    def get_communalities(self):
+        from sklearn.utils.validation import check_is_fitted
+        check_is_fitted(self, "loadings_")
+        loadings = self.loadings_.copy()
+        communalities = (loadings**2).sum(axis=1)
+        return communalities
+
+    def get_uniquenesses(self):
+        from sklearn.utils.validation import check_is_fitted
+        check_is_fitted(self, "loadings_")
+        communalities = self.get_communalities()
+        communalities = communalities.copy()
+        uniqueness = 1 - communalities
+        return uniqueness
+
+    @staticmethod
+    def _get_factor_variance(loadings):
+        n_rows = loadings.shape[0]
+        loadings = loadings**2
+        variance = np.sum(loadings, axis=0)
+        proportional_variance = variance / n_rows
+        cumulative_variance = np.cumsum(proportional_variance, axis=0)
+        return (variance, proportional_variance, cumulative_variance)
+
+    def get_factor_variance(self):
+        from sklearn.utils.validation import check_is_fitted
+        check_is_fitted(self, "loadings_")
+        loadings = self.loadings_.copy()
+        return self._get_factor_variance(loadings)
+
+    def sufficiency(self, num_observations: int) -> Tuple[float, int, float]:
+        nvar = self.corr_.shape[0]
+        degrees = ((nvar - self.n_factors) ** 2 - nvar - self.n_factors) // 2
+        obj = self._fit_ml_objective(
+            self.get_uniquenesses(), self.corr_, self.n_factors
+        )
+        statistic = (
+            num_observations - 1 - (2 * nvar + 5) / 6 - (2 * self.n_factors) / 3
+        ) * obj
+        from scipy.stats import chi2
+        pvalue = chi2.sf(statistic, df=degrees)
+        return statistic, degrees, pvalue
+
+def run_efa():
+    file_path = select_csv_file_gui()
+    if not file_path:
+        print("No file selected.")
+        return
+    data = pd.read_csv(file_path)
+    print("Available columns:\n", data.columns.tolist())
+    num_items = int(input("Enter the number of items to include: "))
+    selected_columns = []
+    for i in range(num_items):
+        col = input(f"Select column {i + 1}: ")
+        selected_columns.append(col)
+    data_subset = data[selected_columns]
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    data_scaled = scaler.fit_transform(data_subset)
+    kmo_all, kmo_model = calculate_kmo(data_scaled)
+    print(f"\nKaiser-Meyer-Olkin (KMO) Measure: {kmo_model}")
+    chi_square_value, degree_of_freedom, p_value = calculate_bartlett_sphericity(data_scaled)
+    print(f"Bartlett’s test of sphericity: Chi-square = {chi_square_value:.3f}, df = {int(degree_of_freedom)}, p-value = {p_value:.3f}")
+    fa_initial = FactorAnalyzor(rotation=None, method='principal')
+    fa_initial.fit(data_scaled)
+    eigenvalues = fa_initial.get_eigenvalues()[0]
+    print("\nEigenvalues for each component detected:")
+    for i, eigenvalue in enumerate(eigenvalues):
+        print(f"Component {i + 1}: {eigenvalue}")
+    variance_explained = eigenvalues / np.sum(eigenvalues)
+    print("\nPercentage of Variance Explained for each component:")
+    for i, variance in enumerate(variance_explained):
+        print(f"Component {i + 1}: {variance * 100:.2f}%")
+    n_components = sum(eigenvalues >= 1)
+    print(f"\n*** number of components with eigenvalue ≥ 1: {n_components}")
+    fa = FactorAnalyzor(rotation="varimax", method='principal', n_factors=n_components)
+    fa.fit(data_scaled)
+    rotated_matrix = fa.loadings_
+    print("\nRotated Component Matrix (Varimax with Kaiser Normalization):")
+    print(pd.DataFrame(rotated_matrix, index=selected_columns))
+
 def __init__():
     parser = argparse.ArgumentParser(description="rjj will execute different functions based on command-line arguments")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
@@ -1354,6 +2172,7 @@ def __init__():
     subparsers.add_parser('pr', help='estimate sample size for regression')
     subparsers.add_parser('n', help='give descriptive statistics for a column')
     subparsers.add_parser('g', help='give descriptive statistics by group(s)')
+    subparsers.add_parser('efa', help='run exploratory factor analysis')
     subparsers.add_parser('dir', help='create folder(s)')
     subparsers.add_parser('bar', help='draw a bar chart')
     subparsers.add_parser('pl', help='draw a scatter plot with line')
@@ -1454,6 +2273,8 @@ def __init__():
         independent_sample_t_test_v2()
     elif args.subcommand == 'eo':
         one_way_anova_v2()
+    elif args.subcommand == 'efa':
+        run_efa()
     elif args.subcommand == 'pp':
         pa_pt()
     elif args.subcommand == 'pi':
