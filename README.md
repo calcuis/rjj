@@ -226,7 +226,7 @@ rjj ra
 ```
 *evaluate the quality of predictor(s) as well as the intended model*
 ### exploratory factor analysis
-probably you cannot believe it works 🎃👻
+probably you cannot believe it works 🎃👻🍬
 ```
 rjj efa
 ```
