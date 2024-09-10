@@ -2034,7 +2034,6 @@ class FactorAnalyzor(BaseEstimator, TransformerMixin):
                 "factor loadings used instead: {}".format(error)
             )
             self.weights_ = self.loadings_
-
         scores = np.dot(X_scale, self.weights_)
         return scores
 
