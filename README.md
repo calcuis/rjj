@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.5.4-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.5.5-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -225,6 +225,12 @@ make prediction(s) about the future 🎯
 rjj ra
 ```
 *evaluate the quality of predictor(s) as well as the intended model*
+### exploratory factor analysis
+probably you cannot believe it works 🎃👻
+```
+rjj efa
+```
+*analyze the structure of interrelationship among a large set of items; summarize it into small set of factors*
 ### plot a graph 📈
 draw a scatter plot; awesome! 🙌
 #### plotter
