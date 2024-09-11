@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.5.9"
+__version__="0.6.0"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -1264,7 +1264,6 @@ def detector():
                 output=given
         else:
                 output="output"
-
         try:
             file1 = pd.read_csv(input1)
             file2 = pd.read_csv(input2)
@@ -2257,7 +2256,7 @@ def __init__():
     subparsers.add_parser('n', help='give descriptive statistics for a column')
     subparsers.add_parser('g', help='give descriptive statistics by group(s)')
     subparsers.add_parser('efa', help='run exploratory factor analysis')
-    subparsers.add_parser('fea', help='run fixed factor exploratory analysis')
+    subparsers.add_parser('tea', help='run fixed factor exploratory analysis')
     subparsers.add_parser('dir', help='create folder(s)')
     subparsers.add_parser('pie', help='draw a pie chart')
     subparsers.add_parser('bar', help='draw a bar chart')
@@ -2361,7 +2360,7 @@ def __init__():
         one_way_anova_v2()
     elif args.subcommand == 'efa':
         run_efa()
-    elif args.subcommand == 'fea':
+    elif args.subcommand == 'tea':
         run_efa_fixed()
     elif args.subcommand == 'pp':
         pa_pt()
