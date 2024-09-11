@@ -231,7 +231,7 @@ probably you cannot believe it works 🎃👻🍬
 rjj efa
 ```
 *analyze the structure of interrelationship among a large set of items; summarize it into small set of factors*
-#### pizza analysis 🍕
+### pizza analysis 🍕
 heat the kitchen for a pie 🥧
 ```
 rjj pie
