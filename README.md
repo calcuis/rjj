@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.5.5-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.5.6-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -231,6 +231,12 @@ probably you cannot believe it works 🎃👻🍬
 rjj efa
 ```
 *analyze the structure of interrelationship among a large set of items; summarize it into small set of factors*
+#### pizza analysis 🍕
+heat the kitchen for a pie 🥧
+```
+rjj pie
+```
+*opt to draw a pie chart*
 ### plot a graph 📈
 draw a scatter plot; awesome! 🙌
 #### plotter
