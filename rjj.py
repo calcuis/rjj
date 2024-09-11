@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.5.5"
+__version__="0.5.6"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -292,6 +292,47 @@ def reliability_test():
     print("\nCronbach's alpha if an item is deleted:")
     for item, alpha in alphas_if_deleted.items():
         print(f" - {item}: {alpha}")
+
+def count_and_percentage(df, column_name):
+    total_count = len(df[column_name])
+    value_counts = df[column_name].value_counts()
+    print(f"Results of frequency count for column '{column_name}':\n")
+    for value, count in value_counts.items():
+        percentage = (count / total_count) * 100
+        print(f"{value}\t{count} ({percentage:.0f}%)")
+    print("-" * 15)
+    print(f"Total:\t{total_count}")
+    ask = input("\nDo you want a pie? (Y/n) ")
+    if ask.lower() == "n":
+        print("Do tell me when you wanna a pie next time; thank you.")
+    else:
+        import tkinter as tk
+        root = tk.Tk()
+        icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
+        root.iconphoto(False, icon)
+        root.title("rjj")
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.pie(value_counts, labels=value_counts.index, autopct='%1.1f%%', startangle=140)
+        ax.axis('equal')
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        canvas = FigureCanvasTkAgg(fig, master=root)
+        canvas.draw()
+        canvas.get_tk_widget().pack()
+        root.mainloop()
+
+def piechart():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    df = pd.read_csv(selected_file)
+    column_name = select_column(df)
+    if column_name in df.columns:
+        count_and_percentage(df, column_name)
+    else:
+        print("Invalid column selected!")
 
 def boxplot():
     csv_files = list_csv_files()
@@ -2173,6 +2214,7 @@ def __init__():
     subparsers.add_parser('g', help='give descriptive statistics by group(s)')
     subparsers.add_parser('efa', help='run exploratory factor analysis')
     subparsers.add_parser('dir', help='create folder(s)')
+    subparsers.add_parser('pie', help='draw a pie chart')
     subparsers.add_parser('bar', help='draw a bar chart')
     subparsers.add_parser('pl', help='draw a scatter plot with line')
     subparsers.add_parser('l', help='draw a line graph')
@@ -2286,6 +2328,8 @@ def __init__():
         pa_ra()
     elif args.subcommand == 'dir':
         mk_dir()
+    elif args.subcommand == 'pie':
+        piechart()
     elif args.subcommand == 'bar':
         charter()
     elif args.subcommand == 'pl':
