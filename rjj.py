@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.5.7"
+__version__="0.5.8"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -60,6 +60,11 @@ def select_column_free(df):
     col_index = int(input(f"Select a column by number: ")) - 1
     return df.columns[col_index]
 
+def clean_data(df, columns):
+    df = df[columns].replace([np.inf, -np.inf], np.nan)
+    df = df.dropna()
+    return df
+
 def mk_dir():
     csv_files = list_csv_files()
     if not csv_files:
@@ -72,11 +77,6 @@ def mk_dir():
     for folder_name in df[selected_column].dropna().unique():
         os.makedirs(str(folder_name), exist_ok=True)
     print("Folders created successfully.")
-
-def clean_data(df, columns):
-    df = df[columns].replace([np.inf, -np.inf], np.nan)
-    df = df.dropna()
-    return df
 
 def one_way_anova_v2():
     file_path = select_csv_file_gui()
@@ -277,21 +277,21 @@ def reliability_test():
     else:
         print("No file selected.")
         return
+    print("Available columns:")
+    for i, col in enumerate(df.columns):
+        print(f"{i + 1}: {col}")
     num_items = int(input("Enter the number of items (columns) within the construct: "))
     selected_columns = []
-    print("Available columns:", df.columns.tolist())
     for i in range(num_items):
-        col_name = input(f"Select column {i + 1}: ")
-        while col_name not in df.columns:
-            print(f"{col_name} is not a valid column name. Please choose from: {df.columns.tolist()}")
-            col_name = input(f"Select column {i + 1}: ")
-        selected_columns.append(col_name)
+        print(f"For item {i + 1}")
+        col = select_column_free(df)
+        selected_columns.append(col)
     df_clean = clean_data(df, selected_columns)
     if df_clean.empty:
         print("No data left after cleaning. Exiting.")
         return
     overall_alpha = cronbach_alpha(df_clean)
-    print(f"Cronbach's alpha for the selected items is: {overall_alpha}")
+    print(f"\nCronbach's alpha for the selected items is: {overall_alpha}")
     alphas_if_deleted = cronbach_alpha_if_deleted(df_clean)
     print("\nCronbach's alpha if an item is deleted:")
     for item, alpha in alphas_if_deleted.items():
@@ -300,7 +300,7 @@ def reliability_test():
 def count_and_percentage(df, column_name):
     total_count = len(df[column_name])
     value_counts = df[column_name].value_counts()
-    print(f"Results of frequency count for column '{column_name}':\n")
+    print(f"Results of pizza analysis for column '{column_name}':\n")
     for value, count in value_counts.items():
         percentage = (count / total_count) * 100
         print(f"{value}\t{count} ({percentage:.0f}%)")
@@ -2144,23 +2144,28 @@ def run_efa():
         print("No file selected.")
         return
     data = pd.read_csv(file_path)
-    print("Available columns:")
-    for i, col in enumerate(data.columns):
-        print(f"{i + 1}: {col}")
-    num_items = int(input("Enter the number of items to include: "))
-    selected_columns = []
-    for i in range(num_items):
-        print(f"For item {i + 1}")
-        col = select_column_free(data)
-        selected_columns.append(col)
-    data_subset = data[selected_columns]
+    use_whole_file = input("Use the entire CSV file for analysis? (Y/n): ").strip().lower()
+    if use_whole_file == 'y':
+        data_subset = data.copy()
+        selected_columns = data.columns.tolist()
+    else:
+        print("Available columns:")
+        for i, col in enumerate(data.columns):
+            print(f"{i + 1}: {col}")
+        num_items = int(input("Enter the number of items (columns) to include: "))
+        selected_columns = []
+        for i in range(num_items):
+            print(f"For item {i + 1}")
+            col = select_column_free(data)
+            selected_columns.append(col)
+    data_subset = clean_data(data, selected_columns)
     from sklearn.preprocessing import StandardScaler
     scaler = StandardScaler()
     data_scaled = scaler.fit_transform(data_subset)
     kmo_all, kmo_model = calculate_kmo(data_scaled)
     print(f"\nKaiser-Meyer-Olkin (KMO) Measure: {kmo_model}")
     chi_square_value, degree_of_freedom, p_value = calculate_bartlett_sphericity(data_scaled)
-    print(f"Bartlett’s test of sphericity: Chi-square = {chi_square_value:.3f}, df = {int(degree_of_freedom)}, p-value = {p_value:.3f}")
+    print(f"Bartlett's test of sphericity: Chi-square = {chi_square_value:.3f}, df = {int(degree_of_freedom)}, p-value = {p_value:.3f}")
     fa_initial = FactorAnalyzor(rotation=None, method='principal')
     fa_initial.fit(data_scaled)
     eigenvalues = fa_initial.get_eigenvalues()[0]
