@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.5.6"
+__version__="0.5.7"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -55,6 +55,10 @@ def select_columnx(df):
     col_index2 = int(input("Select the second column by number: ")) - 1
     col_index3 = int(input("Select the third column by number: ")) - 1
     return df.columns[col_index1], df.columns[col_index2], df.columns[col_index3]
+
+def select_column_free(df):
+    col_index = int(input(f"Select a column by number: ")) - 1
+    return df.columns[col_index]
 
 def mk_dir():
     csv_files = list_csv_files()
@@ -2140,11 +2144,14 @@ def run_efa():
         print("No file selected.")
         return
     data = pd.read_csv(file_path)
-    print("Available columns:\n", data.columns.tolist())
+    print("Available columns:")
+    for i, col in enumerate(data.columns):
+        print(f"{i + 1}: {col}")
     num_items = int(input("Enter the number of items to include: "))
     selected_columns = []
     for i in range(num_items):
-        col = input(f"Select column {i + 1}: ")
+        print(f"For item {i + 1}")
+        col = select_column_free(data)
         selected_columns.append(col)
     data_subset = data[selected_columns]
     from sklearn.preprocessing import StandardScaler
