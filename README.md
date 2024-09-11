@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.5.7-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.5.8-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -213,18 +213,18 @@ evaluate effect size and power for `one-way anova`
 rjj eo
 ```
 *Tukey's Honest Significant Difference (HSD) implemented serves as post hoc multiple comparisons*
-### reliability test
-run reliability analysis for a hypothetical construct; cheers! 🍻
-```
-rjj rt
-```
-*Cronbach alpha if item deleted is provided as well; make your item screening task easy*
 ### regression analysis
 make prediction(s) about the future 🎯
 ```
 rjj ra
 ```
 *evaluate the quality of predictor(s) as well as the intended model*
+### reliability test
+run reliability analysis for a hypothetical construct; cheers! 🍻
+```
+rjj rt
+```
+*Cronbach alpha if item deleted is provided as well; make your item screening task easy*
 ### exploratory factor analysis
 probably you cannot believe it works 🎃👻🍬
 ```
