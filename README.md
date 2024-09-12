@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.6.1-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.6.2-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
 #### install it via pip/pip3
 ```
@@ -225,8 +225,14 @@ run reliability analysis for a hypothetical construct; cheers! 🍻
 rjj rt
 ```
 *Cronbach alpha if item deleted is provided as well; make your item screening task easy*
+### confirmatory factor analysis
+finally it comes 🎃
+```
+rjj cfa
+```
+*draw svg factor diagram; you might need extra setting*
 ### exploratory factor analysis
-probably you cannot believe it works 🎃👻
+probably you cannot believe it works 👻
 ```
 rjj efa
 ```
