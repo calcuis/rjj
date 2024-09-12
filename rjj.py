@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.6.0"
+__version__="0.6.1"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -1622,17 +1622,6 @@ class Rotator(BaseEstimator):
         )
         return self.loadings_
 
-def inv_chol(x, logdet=False):
-    from scipy.linalg import cholesky
-    chol = cholesky(x, lower=True)
-    chol_inv = np.linalg.inv(chol)
-    chol_inv = np.dot(chol_inv.T, chol_inv)
-    chol_logdet = None
-    if logdet:
-        chol_diag = np.diag(chol)
-        chol_logdet = np.sum(np.log(chol_diag * chol_diag))
-    return chol_inv, chol_logdet
-
 def cov(x, ddof=0):
     r = np.cov(x, rowvar=False, ddof=ddof)
     return r
@@ -1696,96 +1685,6 @@ def partial_correlations(x):
     pcor = -1 * covariance_to_correlation(icvx)
     np.fill_diagonal(pcor, 1.0)
     return pcor
-
-def unique_elements(seq):
-    seen = set()
-    return [x for x in seq if not (x in seen or seen.add(x))]
-
-def fill_lower_diag(x):
-    x = np.array(x)
-    x = x if len(x.shape) == 1 else np.squeeze(x, axis=1)
-    n = int(np.sqrt(len(x) * 2)) + 1
-    out = np.zeros((n, n), dtype=float)
-    out[np.tri(n, dtype=bool, k=-1)] = x
-    return out
-
-def merge_variance_covariance(variances, covariances=None):
-    variances = (
-        variances if len(variances.shape) == 1 else np.squeeze(variances, axis=1)
-    )
-    if covariances is None:
-        variance_covariance = np.zeros((variances.shape[0], variances.shape[0]))
-    else:
-        variance_covariance = fill_lower_diag(covariances)
-        variance_covariance += variance_covariance.T
-    np.fill_diagonal(variance_covariance, variances)
-    return variance_covariance
-
-def get_first_idxs_from_values(x, eq=1, use_columns=True):
-    x = np.array(x)
-    if use_columns:
-        n = x.shape[1]
-        row_idx = [np.where(x[:, i] == eq)[0][0] for i in range(n)]
-        col_idx = list(range(n))
-    else:
-        n = x.shape[0]
-        col_idx = [np.where(x[i, :] == eq)[0][0] for i in range(n)]
-        row_idx = list(range(n))
-    return row_idx, col_idx
-
-def get_free_parameter_idxs(x, eq=1):
-    x[np.isnan(x)] = eq
-    x = x.flatten(order="F")
-    return np.where(x == eq)[0]
-
-def duplication_matrix(n=1):
-    if n < 1:
-        raise ValueError(
-            "The argument `n` must be a " "positive integer greater than 1."
-        )
-    dup = np.zeros((int(n * n), int(n * (n + 1) / 2)))
-    count = 0
-    for j in range(n):
-        dup[j * n + j, count + j] = 1
-        if j < n - 1:
-            for i in range(j + 1, n):
-                dup[j * n + i, count + i] = 1
-                dup[i * n + j, count + i] = 1
-        count += n - j - 1
-    return dup
-
-def duplication_matrix_pre_post(x):
-    assert x.shape[0] == x.shape[1]
-    n2 = x.shape[1]
-    n = int(np.sqrt(n2))
-    idx1 = get_symmetric_lower_idxs(n)
-    idx2 = get_symmetric_upper_idxs(n)
-    out = x[idx1, :] + x[idx2, :]
-    u = np.where([i in idx2 for i in idx1])[0]
-    out[u, :] = out[u, :] / 2.0
-    out = out[:, idx1] + out[:, idx2]
-    out[:, u] = out[:, u] / 2.0
-    return out
-
-def commutation_matrix(p, q):
-    identity = np.eye(p * q)
-    indices = np.arange(p * q).reshape((p, q), order="F")
-    return identity.take(indices.ravel(), axis=0)
-
-def get_symmetric_lower_idxs(n=1, diag=True):
-    rows = np.repeat(np.arange(n), n).reshape(n, n)
-    cols = rows.T
-    if diag:
-        return np.where((rows >= cols).T.flatten())[0]
-    return np.where((cols > rows).T.flatten())[0]
-
-def get_symmetric_upper_idxs(n=1, diag=True):
-    rows = np.repeat(np.arange(n), n).reshape(n, n)
-    cols = rows.T
-    temp = np.arange(n * n).reshape(n, n)
-    if diag:
-        return temp.T[(rows >= cols).T]
-    return temp.T[(cols > rows).T]
 
 def calculate_kmo(x):
     partial_corr = partial_correlations(x)
@@ -2256,7 +2155,7 @@ def __init__():
     subparsers.add_parser('n', help='give descriptive statistics for a column')
     subparsers.add_parser('g', help='give descriptive statistics by group(s)')
     subparsers.add_parser('efa', help='run exploratory factor analysis')
-    subparsers.add_parser('tea', help='run fixed factor exploratory analysis')
+    subparsers.add_parser('tea', help='transfer fixed factor to exploratory analysis')
     subparsers.add_parser('dir', help='create folder(s)')
     subparsers.add_parser('pie', help='draw a pie chart')
     subparsers.add_parser('bar', help='draw a bar chart')
