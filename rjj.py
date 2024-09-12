@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.6.2"
+__version__="0.6.3"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -1711,7 +1711,7 @@ def calculate_bartlett_sphericity(x):
     p_value = chi2.sf(statistic, degrees_of_freedom)
     return statistic, degrees_of_freedom, p_value
 
-class eFactorAnalyzor(BaseEstimator, TransformerMixin):
+class eAnalyzor(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         n_factors=3,
@@ -2223,7 +2223,7 @@ class ModelSpecification:
             "factor_names": self._factor_names,
         }
 
-class ModelSpecificationParser:
+class ModelParser:
     @staticmethod
     def parse_model_specification_from_dict(X, specification=None):
         if specification is None:
@@ -2279,7 +2279,7 @@ class ModelSpecificationParser:
             **{"loadings": loadings, "n_variables": n_variables, "n_factors": n_factors}
         )
 
-class cFactorAnalyzor(BaseEstimator, TransformerMixin):
+class cAnalyzor(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         specification=None,
@@ -2379,7 +2379,7 @@ class cFactorAnalyzor(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None):
         if self.specification is None:
-            self.model = ModelSpecificationParser.parse_model_specification_from_array(
+            self.model = ModelParser.parse_model_specification_from_array(
                 X
             )
         elif isinstance(self.specification, ModelSpecification):
@@ -2595,6 +2595,24 @@ class cFactorAnalyzor(BaseEstimator, TransformerMixin):
         error_vars_se = se[loadings_idx:error_vars_idx]
         return loadings_se, error_vars_se
 
+def run_exploratory_factor_analysis(csv_file_path, n_factors):
+    data = pd.read_csv(csv_file_path)
+    fa = eAnalyzor(n_factors=n_factors, rotation='varimax', method='principal')
+    fa.fit(data)
+    loadings = fa.loadings_
+    loading_df = pd.DataFrame(loadings, index=data.columns)
+    return loading_df
+
+def assign_items_to_components(loading_df):
+    component_dict = {f'Component {i}': [] for i in range(loading_df.shape[1])}
+    for item in loading_df.index:
+        row = loading_df.loc[item]
+        highest_component = row.abs().idxmax()
+        component_num = highest_component
+        loading_value = row[highest_component]
+        component_dict[f'Component {component_num}'].append(f"{item} ({loading_value:.3f})")
+    return component_dict
+
 def run_cfa():
     file_path = select_csv_file_gui()
     data = pd.read_csv(file_path)
@@ -2619,7 +2637,7 @@ def run_cfa():
             loading_matrix[row_index, factor_index] = 1
             row_index += 1
     model_spec = ModelSpecification(loadings=loading_matrix, n_factors=n_factors, n_variables=n_variables)
-    cfa = cFactorAnalyzor(model_spec, disp=True)
+    cfa = cAnalyzor(model_spec, disp=True)
     cfa.fit(data_subset.values)
     loadings = pd.DataFrame(cfa.loadings_, index=data_subset.columns)
     loadings.columns = factor_items.keys()
@@ -2633,26 +2651,10 @@ def run_cfa():
             dot.node(item, shape='box')
             dot.edge(factor, item, label=f"{round(loadings.loc[item].iloc[factor_idx], 2)}")
     output_path = "factor_diagram"
-    dot.render(output_path, format="svg")
-    print(f"\nFactor diagram saved as {output_path}.svg")
-
-def run_exploratory_factor_analysis(csv_file_path, n_factors):
-    data = pd.read_csv(csv_file_path)
-    fa = eFactorAnalyzor(n_factors=n_factors, rotation='varimax', method='principal')
-    fa.fit(data)
-    loadings = fa.loadings_
-    loading_df = pd.DataFrame(loadings, index=data.columns)
-    return loading_df
-
-def assign_items_to_components(loading_df):
-    component_dict = {f'Component {i}': [] for i in range(loading_df.shape[1])}
-    for item in loading_df.index:
-        row = loading_df.loc[item]
-        highest_component = row.abs().idxmax()
-        component_num = highest_component
-        loading_value = row[highest_component]
-        component_dict[f'Component {component_num}'].append(f"{item} ({loading_value:.3f})")
-    return component_dict
+    ask = input("\nDraw a SVG factor diagram (Y/n)? ")
+    if  ask.lower() == 'y':
+        dot.render(output_path, format="svg")
+        print(f"Factor diagram saved as {output_path}.svg")
 
 def run_efa():
     file_path = select_csv_file_gui()
@@ -2682,7 +2684,7 @@ def run_efa():
     print(f"\nKaiser-Meyer-Olkin (KMO) Measure: {kmo_model}")
     chi_square_value, degree_of_freedom, p_value = calculate_bartlett_sphericity(data_scaled)
     print(f"Bartlett's test of sphericity: Chi-square = {chi_square_value:.3f}, df = {int(degree_of_freedom)}, p-value = {p_value:.3f}")
-    fa_initial = eFactorAnalyzor(rotation=None, method='principal')
+    fa_initial = eAnalyzor(rotation=None, method='principal')
     fa_initial.fit(data_scaled)
     eigenvalues = fa_initial.get_eigenvalues()[0]
     print("\nEigenvalues for each component detected:")
@@ -2694,7 +2696,7 @@ def run_efa():
         print(f"Component {i + 1}: {variance * 100:.2f}%")
     n_components = sum(eigenvalues >= 1)
     print(f"\n*** number of components with eigenvalue ≥ 1: {n_components}")
-    fa = eFactorAnalyzor(rotation="varimax", method='principal', n_factors=n_components)
+    fa = eAnalyzor(rotation="varimax", method='principal', n_factors=n_components)
     fa.fit(data_scaled)
     rotated_matrix = fa.loadings_
     print("\nRotated Component Matrix (Varimax with Kaiser Normalization):")
