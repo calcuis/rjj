@@ -225,12 +225,6 @@ run reliability analysis for a hypothetical construct; cheers! 🍻
 rjj rt
 ```
 *Cronbach alpha if item deleted is provided as well; make your item screening task easy*
-### confirmatory factor analysis
-finally it comes 🎃
-```
-rjj cfa
-```
-*draw svg factor diagram; you might need extra setting*
 ### exploratory factor analysis
 probably you cannot believe it works 👻
 ```
@@ -243,6 +237,12 @@ run it with a fixed number of factor(s) ☕️
 rjj tea
 ```
 *remove unnecessary columns in your csv file; since it eats them up all this time* 👻🍬🍬🍬
+### confirmatory factor analysis
+wow! finally it comes 🎃👻
+```
+rjj cfa
+```
+*draw svg factor diagram; you might need [graphviz](https://www.graphviz.org/download/) for rendering dot language to graph object (optional)* 
 ### pizza analysis 🍕
 heat the kitchen for a pie 🥧
 ```
