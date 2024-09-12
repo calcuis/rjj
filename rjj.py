@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.6.3"
+__version__="0.6.4"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -2642,17 +2642,17 @@ def run_cfa():
     loadings = pd.DataFrame(cfa.loadings_, index=data_subset.columns)
     loadings.columns = factor_items.keys()
     print("\nFactor Loadings:\n", loadings)
-    import graphviz
-    dot = graphviz.Digraph()
-    for factor in factor_items.keys():
-        dot.node(factor, shape='ellipse')
-    for factor_idx, (factor, items) in enumerate(factor_items.items()):
-        for item in items:
-            dot.node(item, shape='box')
-            dot.edge(factor, item, label=f"{round(loadings.loc[item].iloc[factor_idx], 2)}")
-    output_path = "factor_diagram"
     ask = input("\nDraw a SVG factor diagram (Y/n)? ")
     if  ask.lower() == 'y':
+        import graphviz
+        dot = graphviz.Digraph()
+        for factor in factor_items.keys():
+            dot.node(factor, shape='ellipse')
+        for factor_idx, (factor, items) in enumerate(factor_items.items()):
+            for item in items:
+                dot.node(item, shape='box')
+                dot.edge(factor, item, label=f"{round(loadings.loc[item].iloc[factor_idx], 2)}")
+        output_path = "factor_diagram"
         dot.render(output_path, format="svg")
         print(f"Factor diagram saved as {output_path}.svg")
 
