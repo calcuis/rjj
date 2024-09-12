@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.6.1"
+__version__="0.6.2"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -1711,7 +1711,7 @@ def calculate_bartlett_sphericity(x):
     p_value = chi2.sf(statistic, degrees_of_freedom)
     return statistic, degrees_of_freedom, p_value
 
-class FactorAnalyzor(BaseEstimator, TransformerMixin):
+class eFactorAnalyzor(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         n_factors=3,
@@ -2036,9 +2036,609 @@ class FactorAnalyzor(BaseEstimator, TransformerMixin):
         pvalue = chi2.sf(statistic, df=degrees)
         return statistic, degrees, pvalue
 
+def inv_chol(x, logdet=False):
+    from scipy.linalg import cholesky
+    chol = cholesky(x, lower=True)
+    chol_inv = np.linalg.inv(chol)
+    chol_inv = np.dot(chol_inv.T, chol_inv)
+    chol_logdet = None
+    if logdet:
+        chol_diag = np.diag(chol)
+        chol_logdet = np.sum(np.log(chol_diag * chol_diag))
+    return chol_inv, chol_logdet
+
+def unique_elements(seq):
+    seen = set()
+    return [x for x in seq if not (x in seen or seen.add(x))]
+
+def fill_lower_diag(x):
+    x = np.array(x)
+    x = x if len(x.shape) == 1 else np.squeeze(x, axis=1)
+    n = int(np.sqrt(len(x) * 2)) + 1
+    out = np.zeros((n, n), dtype=float)
+    out[np.tri(n, dtype=bool, k=-1)] = x
+    return out
+
+def merge_variance_covariance(variances, covariances=None):
+    variances = (
+        variances if len(variances.shape) == 1 else np.squeeze(variances, axis=1)
+    )
+    if covariances is None:
+        variance_covariance = np.zeros((variances.shape[0], variances.shape[0]))
+    else:
+        variance_covariance = fill_lower_diag(covariances)
+        variance_covariance += variance_covariance.T
+    np.fill_diagonal(variance_covariance, variances)
+    return variance_covariance
+
+def get_first_idxs_from_values(x, eq=1, use_columns=True):
+    x = np.array(x)
+    if use_columns:
+        n = x.shape[1]
+        row_idx = [np.where(x[:, i] == eq)[0][0] for i in range(n)]
+        col_idx = list(range(n))
+    else:
+        n = x.shape[0]
+        col_idx = [np.where(x[i, :] == eq)[0][0] for i in range(n)]
+        row_idx = list(range(n))
+    return row_idx, col_idx
+
+def get_free_parameter_idxs(x, eq=1):
+    x[np.isnan(x)] = eq
+    x = x.flatten(order="F")
+    return np.where(x == eq)[0]
+
+def duplication_matrix(n=1):
+    if n < 1:
+        raise ValueError(
+            "The argument `n` must be a " "positive integer greater than 1."
+        )
+    dup = np.zeros((int(n * n), int(n * (n + 1) / 2)))
+    count = 0
+    for j in range(n):
+        dup[j * n + j, count + j] = 1
+        if j < n - 1:
+            for i in range(j + 1, n):
+                dup[j * n + i, count + i] = 1
+                dup[i * n + j, count + i] = 1
+        count += n - j - 1
+    return dup
+
+def duplication_matrix_pre_post(x):
+    assert x.shape[0] == x.shape[1]
+    n2 = x.shape[1]
+    n = int(np.sqrt(n2))
+    idx1 = get_symmetric_lower_idxs(n)
+    idx2 = get_symmetric_upper_idxs(n)
+    out = x[idx1, :] + x[idx2, :]
+    u = np.where([i in idx2 for i in idx1])[0]
+    out[u, :] = out[u, :] / 2.0
+    out = out[:, idx1] + out[:, idx2]
+    out[:, u] = out[:, u] / 2.0
+    return out
+
+def commutation_matrix(p, q):
+    identity = np.eye(p * q)
+    indices = np.arange(p * q).reshape((p, q), order="F")
+    return identity.take(indices.ravel(), axis=0)
+
+def get_symmetric_lower_idxs(n=1, diag=True):
+    rows = np.repeat(np.arange(n), n).reshape(n, n)
+    cols = rows.T
+    if diag:
+        return np.where((rows >= cols).T.flatten())[0]
+    return np.where((cols > rows).T.flatten())[0]
+
+def get_symmetric_upper_idxs(n=1, diag=True):
+    rows = np.repeat(np.arange(n), n).reshape(n, n)
+    cols = rows.T
+    temp = np.arange(n * n).reshape(n, n)
+    if diag:
+        return temp.T[(rows >= cols).T]
+    return temp.T[(cols > rows).T]
+
+class ModelSpecification:
+    def __init__(
+        self, loadings, n_factors, n_variables, factor_names=None, variable_names=None
+    ):
+        assert isinstance(loadings, np.ndarray)
+        assert loadings.shape[0] == n_variables
+        assert loadings.shape[1] == n_factors
+        self._loadings = loadings
+        self._n_factors = n_factors
+        self._n_variables = n_variables
+        self._factor_names = factor_names
+        self._variable_names = variable_names
+        self._n_lower_diag = get_symmetric_lower_idxs(n_factors, False).shape[0]
+        self._error_vars = np.full((n_variables, 1), np.nan)
+        self._factor_covs = np.full((n_factors, n_factors), np.nan)
+        self._loadings_free = get_free_parameter_idxs(loadings, eq=1)
+        self._error_vars_free = merge_variance_covariance(self._error_vars)
+        self._error_vars_free = get_free_parameter_idxs(self._error_vars_free, eq=-1)
+        self._factor_covs_free = get_symmetric_lower_idxs(n_factors, False)
+
+    def __str__(self):
+        return f"<ModelSpecification object at {hex(id(self))}>"
+
+    def copy(self):
+        from copy import deepcopy
+        return deepcopy(self)
+
+    @property
+    def loadings(self):
+        return self._loadings.copy()
+
+    @property
+    def error_vars(self):
+        return self._error_vars.copy()
+
+    @property
+    def factor_covs(self):
+        return self._factor_covs.copy()
+
+    @property
+    def loadings_free(self):
+        return self._loadings_free.copy()
+
+    @property
+    def error_vars_free(self):
+        return self._error_vars_free.copy()
+
+    @property
+    def factor_covs_free(self):
+        return self._factor_covs_free.copy()
+
+    @property
+    def n_variables(self):
+        return self._n_variables
+
+    @property
+    def n_factors(self):
+        return self._n_factors
+
+    @property
+    def n_lower_diag(self):
+        return self._n_lower_diag
+
+    @property
+    def factor_names(self):
+        return self._factor_names
+
+    @property
+    def variable_names(self):
+        return self._variable_names
+
+    def get_model_specification_as_dict(self):
+        return {
+            "loadings": self._loadings.copy(),
+            "error_vars": self._error_vars.copy(),
+            "factor_covs": self._factor_covs.copy(),
+            "loadings_free": self._loadings_free.copy(),
+            "error_vars_free": self._error_vars_free.copy(),
+            "factor_covs_free": self._factor_covs_free.copy(),
+            "n_variables": self._n_variables,
+            "n_factors": self._n_factors,
+            "n_lower_diag": self._n_lower_diag,
+            "variable_names": self._variable_names,
+            "factor_names": self._factor_names,
+        }
+
+class ModelSpecificationParser:
+    @staticmethod
+    def parse_model_specification_from_dict(X, specification=None):
+        if specification is None:
+            factor_names, variable_names = None, None
+            n_variables, n_factors = X.shape[1], X.shape[1]
+            loadings = np.ones((n_factors, n_factors), dtype=int)
+        elif isinstance(specification, dict):
+            factor_names = list(specification)
+            variable_names = unique_elements(
+                [v for f in specification.values() for v in f]
+            )
+            loadings_new = {}
+            for factor in factor_names:
+                loadings_for_factor = pd.Series(variable_names).isin(
+                    specification[factor]
+                )
+                loadings_for_factor = loadings_for_factor.astype(int)
+                loadings_new[factor] = loadings_for_factor
+            loadings = pd.DataFrame(loadings_new).values
+            n_variables, n_factors = loadings.shape
+        else:
+            raise ValueError(
+                "The model `specification` must be either a dict "
+                "or None, not {}".format(type(specification))
+            )
+        return ModelSpecification(
+            **{
+                "loadings": loadings,
+                "n_variables": n_variables,
+                "n_factors": n_factors,
+                "factor_names": factor_names,
+                "variable_names": variable_names,
+            }
+        )
+
+    @staticmethod
+    def parse_model_specification_from_array(X, specification=None):
+        if specification is None:
+            n_variables, n_factors = X.shape[1], X.shape[1]
+            loadings = np.ones((n_factors, n_factors), dtype=int)
+        elif isinstance(specification, (np.ndarray, pd.DataFrame)):
+            n_variables, n_factors = specification.shape
+            if isinstance(specification, pd.DataFrame):
+                loadings = specification.values.copy()
+            else:
+                loadings = specification.copy()
+        else:
+            raise ValueError(
+                "The model `specification` must be either a numpy array "
+                "or None, not {}".format(type(specification))
+            )
+        return ModelSpecification(
+            **{"loadings": loadings, "n_variables": n_variables, "n_factors": n_factors}
+        )
+
+class cFactorAnalyzor(BaseEstimator, TransformerMixin):
+    def __init__(
+        self,
+        specification=None,
+        n_obs=None,
+        is_cov_matrix=False,
+        bounds=None,
+        max_iter=200,
+        tol=None,
+        impute="median",
+        disp=True,
+    ):
+        if is_cov_matrix and n_obs is None:
+            raise ValueError(
+                "If `is_cov_matrix=True`, you must provide "
+                "the number of observations, `n_obs`."
+            )
+        self.specification = specification
+        self.n_obs = n_obs
+        self.is_cov_matrix = is_cov_matrix
+        self.bounds = bounds
+        self.max_iter = max_iter
+        self.tol = tol
+        self.impute = impute
+        self.disp = disp
+        self.cov_ = None
+        self.mean_ = None
+        self.loadings_ = None
+        self.error_vars_ = None
+        self.factor_varcovs_ = None
+        self.log_likelihood_ = None
+        self.aic_ = None
+        self.bic_ = None
+        self._n_factors = None
+        self._n_variables = None
+        self._n_lower_diag = None
+
+    @staticmethod
+    def _combine(
+        loadings,
+        error_vars,
+        factor_vars,
+        factor_covs,
+        n_factors,
+        n_variables,
+        n_lower_diag,
+    ):
+        loadings = loadings.reshape(n_factors * n_variables, 1, order="F")
+        error_vars = error_vars.reshape(n_variables, 1, order="F")
+        factor_vars = factor_vars.reshape(n_factors, 1, order="F")
+        factor_covs = factor_covs.reshape(n_lower_diag, 1, order="F")
+        return np.concatenate([loadings, error_vars, factor_vars, factor_covs])
+
+    @staticmethod
+    def _split(x, n_factors, n_variables, n_lower_diag):
+        loadings_ix = int(n_factors * n_variables)
+        error_vars_ix = n_variables + loadings_ix
+        factor_vars_ix = n_factors + error_vars_ix
+        factor_covs_ix = n_lower_diag + factor_vars_ix
+        return (
+            x[:loadings_ix].reshape((n_variables, n_factors), order="F"),
+            x[loadings_ix:error_vars_ix].reshape((n_variables, 1), order="F"),
+            x[error_vars_ix:factor_vars_ix].reshape((n_factors, 1), order="F"),
+            x[factor_vars_ix:factor_covs_ix].reshape((n_lower_diag, 1), order="F"),
+        )
+
+    def _objective(self, x0, cov_mtx, loadings):
+        (
+            loadings_init,
+            error_vars_init,
+            factor_vars_init,
+            factor_covs_init,
+        ) = self._split(
+            x0, self.model.n_factors, self.model.n_variables, self.model.n_lower_diag
+        )
+        loadings_init[np.where(loadings == 0)] = 0
+        factor_varcov_init = merge_variance_covariance(
+            factor_vars_init, factor_covs_init
+        )
+        error_varcov_init = merge_variance_covariance(error_vars_init)
+        with np.errstate(all="ignore"):
+            factor_varcov_init = covariance_to_correlation(factor_varcov_init)
+        sigma_theta = (
+            loadings_init.dot(factor_varcov_init).dot(loadings_init.T)
+            + error_varcov_init
+        )
+        with np.errstate(all="ignore"):
+            error = -(
+                ((-self.n_obs * self.model.n_variables / 2) * np.log(2 * np.pi))
+                - (self.n_obs / 2)
+                * (
+                    np.log(np.linalg.det(sigma_theta))
+                    + np.trace(cov_mtx.dot(np.linalg.inv(sigma_theta)))
+                )
+            )
+            error = 0.0 if error < 0.0 else error
+        return error
+
+    def fit(self, X, y=None):
+        if self.specification is None:
+            self.model = ModelSpecificationParser.parse_model_specification_from_array(
+                X
+            )
+        elif isinstance(self.specification, ModelSpecification):
+            self.model = self.specification.copy()
+        else:
+            raise ValueError(
+                "The `specification` must be None or `ModelSpecification` "
+                "instance, not {}".format(type(self.specification))
+            )
+        if isinstance(X, pd.DataFrame):
+            X = X.values
+        from sklearn.utils import check_array
+        X = check_array(X, force_all_finite="allow-nan", estimator=self, copy=True)
+        if np.isnan(X).any() and not self.is_cov_matrix:
+            X = impute_values(X, how=self.impute)
+        if not self.is_cov_matrix:
+            self.n_obs = X.shape[0] if self.n_obs is None else self.n_obs
+            self.mean_ = np.mean(X, axis=0)
+            cov_mtx = cov(X)
+        else:
+            error_msg = (
+                "If `is_cov_matrix=True`, then the rows and column in the data "
+                "set must be equal, and must equal the number of variables "
+                "in your model."
+            )
+            assert X.shape[0] == X.shape[1] == self.model.n_variables, error_msg
+            cov_mtx = X.copy()
+        self.cov_ = cov_mtx.copy()
+        loading_init = self.model.loadings
+        error_vars_init = np.full((self.model.n_variables, 1), 0.5)
+        factor_vars_init = np.full((self.model.n_factors, 1), 1.0)
+        factor_covs_init = np.full((self.model.n_lower_diag, 1), 0.05)
+        x0 = self._combine(
+            loading_init,
+            error_vars_init,
+            factor_vars_init,
+            factor_covs_init,
+            self.model.n_factors,
+            self.model.n_variables,
+            self.model.n_lower_diag,
+        )
+        if self.bounds is not None:
+            error_msg = (
+                "The length of `bounds` must equal the length of your "
+                "input array `x0`: {} != {}.".format(len(self.bounds), len(x0))
+            )
+            assert len(self.bounds) == len(x0), error_msg
+        from scipy.optimize import minimize
+        res = minimize(
+            self._objective,
+            x0.flatten(),
+            method="L-BFGS-B",
+            options={"maxiter": self.max_iter, "disp": self.disp},
+            bounds=self.bounds,
+            args=(cov_mtx, self.model.loadings),
+        )
+        if not res.success:
+            warnings.warn(
+                f"The optimization routine failed to converge: {str(res.message)}"
+            )
+        (loadings_res, error_vars_res, factor_vars_res, factor_covs_res) = self._split(
+            res.x, self.model.n_factors, self.model.n_variables, self.model.n_lower_diag
+        )
+        factor_varcovs_res = merge_variance_covariance(factor_vars_res, factor_covs_res)
+        with np.errstate(all="ignore"):
+            factor_varcovs_res = covariance_to_correlation(factor_varcovs_res)
+        self.loadings_ = loadings_res
+        self.error_vars_ = error_vars_res
+        self.factor_varcovs_ = factor_varcovs_res
+        self.log_likelihood_ = -res.fun
+        self.aic_ = 2 * res.fun + 2 * (x0.shape[0] + self.model.n_variables)
+        if self.n_obs is not None:
+            self.bic_ = 2 * res.fun + np.log(self.n_obs) * (
+                x0.shape[0] + self.model.n_variables
+            )
+        return self
+
+    def transform(self, X):
+        if isinstance(X, pd.DataFrame):
+            X = X.values
+        from sklearn.utils import check_array
+        X = check_array(X, force_all_finite=True, estimator=self, copy=True)
+        from sklearn.utils.validation import check_is_fitted
+        check_is_fitted(self, ["loadings_", "error_vars_"])
+        if self.mean_ is None:
+            warnings.warn(
+                "Could not find original mean; using the mean "
+                "from the current data set."
+            )
+            mean = np.mean(X, axis=0)
+        else:
+            mean = self.mean_
+        X_scale = X - mean
+        loadings = self.loadings_.copy()
+        error_vars = self.error_vars_.copy()
+        error_covs = np.eye(error_vars.shape[0])
+        np.fill_diagonal(error_covs, error_vars)
+        error_covs_inv = np.linalg.inv(error_covs)
+        weights = (
+            np.linalg.pinv(loadings.T.dot(error_covs_inv).dot(loadings))
+            .dot(loadings.T)
+            .dot(error_covs_inv)
+        )
+        scores = weights.dot(X_scale.T).T
+        return scores
+
+    def get_model_implied_cov(self):
+        from sklearn.utils.validation import check_is_fitted
+        check_is_fitted(self, ["loadings_", "factor_varcovs_"])
+        error = np.diag(self.error_vars_.flatten())
+        return self.loadings_.dot(self.factor_varcovs_).dot(self.loadings_.T) + error
+
+    def _get_derivatives_implied_cov(self):
+        from sklearn.utils.validation import check_is_fitted
+        check_is_fitted(self, "loadings_")
+        loadings = self.loadings_.copy()
+        factor_covs = self.factor_varcovs_.copy()
+        sym_lower_var_idx = get_symmetric_lower_idxs(self.model.n_variables)
+        sym_upper_fac_idx = get_symmetric_upper_idxs(self.model.n_factors, diag=False)
+        sym_lower_fac_idx = get_symmetric_lower_idxs(self.model.n_factors, diag=False)
+        factors_diag = np.eye(self.model.n_factors)
+        factors_diag_mult = (
+            factors_diag.dot(factor_covs).dot(factors_diag.T).dot(loadings.T)
+        )
+        loadings_dx = np.eye(self.model.n_variables**2) + commutation_matrix(
+            self.model.n_variables, self.model.n_variables
+        )
+        loadings_dx = loadings_dx.dot(
+            np.kron(factors_diag_mult, np.eye(self.model.n_variables)).T
+        )
+        factor_covs_dx = loadings.dot(factors_diag)
+        factor_covs_dx = np.kron(factor_covs_dx, factor_covs_dx)
+        off_diag = (
+            factor_covs_dx[:, sym_lower_fac_idx] + factor_covs_dx[:, sym_upper_fac_idx]
+        )
+        combine_indices = np.concatenate([sym_upper_fac_idx, sym_lower_fac_idx])
+        combine_diag = np.concatenate([off_diag, off_diag], axis=1)
+        factor_covs_dx[:, combine_indices] = combine_diag
+        factor_covs_dx = factor_covs_dx[:, : factor_covs.size]
+        error_covs_dx = np.eye(self.model.n_variables**2)
+        loadings_dx = loadings_dx[sym_lower_var_idx, :]
+        factor_covs_dx = factor_covs_dx[sym_lower_var_idx, :]
+        error_covs_dx = error_covs_dx[sym_lower_var_idx, :]
+        intercept_dx = np.zeros(
+            (loadings_dx.shape[0], self.model.n_variables), dtype=float
+        )
+        return (
+            loadings_dx[:, self.model.loadings_free].copy(),
+            factor_covs_dx[:, self.model.factor_covs_free].copy(),
+            error_covs_dx[:, self.model.error_vars_free].copy(),
+            intercept_dx,
+        )
+
+    def _get_derivatives_implied_mu(self):
+        from sklearn.utils.validation import check_is_fitted
+        check_is_fitted(self, "loadings_")
+        factors_zero = np.zeros((self.model.n_factors, 1))
+        factors_diag = np.eye(self.model.n_factors)
+        error_covs_dx = np.zeros(
+            (self.model.n_variables, len(self.model.error_vars_free))
+        )
+        factor_covs_dx = np.zeros(
+            (self.model.n_variables, len(self.model.factor_covs_free))
+        )
+        loadings_dx = np.kron(
+            factors_diag.dot(factors_zero).T, np.eye(self.model.n_variables)
+        )
+        loadings_dx = loadings_dx[:, self.model.loadings_free].copy()
+        intercept_dx = np.zeros((loadings_dx.shape[0], self.model.n_variables))
+        intercept_dx[: self.model.n_variables, : self.model.n_variables] = np.eye(
+            self.model.n_variables
+        )
+        return (loadings_dx, factor_covs_dx, error_covs_dx, intercept_dx)
+
+    def get_standard_errors(self):
+        from sklearn.utils.validation import check_is_fitted
+        check_is_fitted(self, ["loadings_", "n_obs"])
+        (
+            loadings_dx,
+            factor_covs_dx,
+            error_covs_dx,
+            intercept_dx,
+        ) = self._get_derivatives_implied_cov()
+        (
+            loadings_dx_mu,
+            factor_covs_dx_mu,
+            error_covs_dx_mu,
+            intercept_dx_mu,
+        ) = self._get_derivatives_implied_mu()
+        loadings_dx = np.append(loadings_dx_mu, loadings_dx, axis=0)
+        factor_covs_dx = np.append(factor_covs_dx_mu, factor_covs_dx, axis=0)
+        error_cov_dx = np.append(error_covs_dx_mu, error_covs_dx, axis=0)
+        intercept_dx = np.append(intercept_dx_mu, intercept_dx, axis=0)
+        sigma = self.get_model_implied_cov()
+        sigma_inv = np.linalg.inv(sigma)
+        sigma_inv_kron = np.kron(sigma_inv, sigma_inv)
+        h1_information = 0.5 * duplication_matrix_pre_post(sigma_inv_kron)
+        from scipy.linalg import block_diag
+        h1_information = block_diag(sigma_inv, h1_information)
+        delta = np.concatenate(
+            (loadings_dx, error_cov_dx, factor_covs_dx, intercept_dx), axis=1
+        )
+        information = delta.T.dot(h1_information).dot(delta)
+        information = (1 / self.n_obs) * np.linalg.inv(information)
+        se = np.sqrt(np.abs(np.diag(information)))
+        loadings_idx = len(self.model.loadings_free)
+        error_vars_idx = self.model.n_variables + loadings_idx
+        loadings_se = np.zeros((self.model.n_factors * self.model.n_variables,))
+        loadings_se[self.model.loadings_free] = se[:loadings_idx]
+        loadings_se = loadings_se.reshape(
+            (self.model.n_variables, self.model.n_factors), order="F"
+        )
+        error_vars_se = se[loadings_idx:error_vars_idx]
+        return loadings_se, error_vars_se
+
+def run_cfa():
+    file_path = select_csv_file_gui()
+    data = pd.read_csv(file_path)
+    print("Available columns: ", data.columns.tolist())
+    n_factors = int(input("\nEnter the number of factors in the model: "))
+    factor_items = {}
+    all_items = []
+    for factor in range(1, n_factors + 1):
+        n_items = int(input(f"Enter the number of items for Factor {factor}: "))
+        items = []
+        for i in range(n_items):
+            item = input(f"Enter the column name for item {i+1} of Factor {factor}: ")
+            items.append(item)
+            all_items.append(item)
+        factor_items[f"Factor {factor}"] = items
+    data_subset = data[all_items]
+    n_variables = len(all_items)
+    loading_matrix = np.zeros((n_variables, n_factors))
+    row_index = 0
+    for factor_index, (factor, items) in enumerate(factor_items.items()):
+        for item in items:
+            loading_matrix[row_index, factor_index] = 1
+            row_index += 1
+    model_spec = ModelSpecification(loadings=loading_matrix, n_factors=n_factors, n_variables=n_variables)
+    cfa = cFactorAnalyzor(model_spec, disp=True)
+    cfa.fit(data_subset.values)
+    loadings = pd.DataFrame(cfa.loadings_, index=data_subset.columns)
+    loadings.columns = factor_items.keys()
+    print("\nFactor Loadings:\n", loadings)
+    import graphviz
+    dot = graphviz.Digraph()
+    for factor in factor_items.keys():
+        dot.node(factor, shape='ellipse')
+    for factor_idx, (factor, items) in enumerate(factor_items.items()):
+        for item in items:
+            dot.node(item, shape='box')
+            dot.edge(factor, item, label=f"{round(loadings.loc[item].iloc[factor_idx], 2)}")
+    output_path = "factor_diagram"
+    dot.render(output_path, format="svg")
+    print(f"\nFactor diagram saved as {output_path}.svg")
+
 def run_exploratory_factor_analysis(csv_file_path, n_factors):
     data = pd.read_csv(csv_file_path)
-    fa = FactorAnalyzor(n_factors=n_factors, rotation='varimax', method='principal')
+    fa = eFactorAnalyzor(n_factors=n_factors, rotation='varimax', method='principal')
     fa.fit(data)
     loadings = fa.loadings_
     loading_df = pd.DataFrame(loadings, index=data.columns)
@@ -2082,7 +2682,7 @@ def run_efa():
     print(f"\nKaiser-Meyer-Olkin (KMO) Measure: {kmo_model}")
     chi_square_value, degree_of_freedom, p_value = calculate_bartlett_sphericity(data_scaled)
     print(f"Bartlett's test of sphericity: Chi-square = {chi_square_value:.3f}, df = {int(degree_of_freedom)}, p-value = {p_value:.3f}")
-    fa_initial = FactorAnalyzor(rotation=None, method='principal')
+    fa_initial = eFactorAnalyzor(rotation=None, method='principal')
     fa_initial.fit(data_scaled)
     eigenvalues = fa_initial.get_eigenvalues()[0]
     print("\nEigenvalues for each component detected:")
@@ -2094,7 +2694,7 @@ def run_efa():
         print(f"Component {i + 1}: {variance * 100:.2f}%")
     n_components = sum(eigenvalues >= 1)
     print(f"\n*** number of components with eigenvalue ≥ 1: {n_components}")
-    fa = FactorAnalyzor(rotation="varimax", method='principal', n_factors=n_components)
+    fa = eFactorAnalyzor(rotation="varimax", method='principal', n_factors=n_components)
     fa.fit(data_scaled)
     rotated_matrix = fa.loadings_
     print("\nRotated Component Matrix (Varimax with Kaiser Normalization):")
@@ -2154,6 +2754,7 @@ def __init__():
     subparsers.add_parser('pr', help='estimate sample size for regression')
     subparsers.add_parser('n', help='give descriptive statistics for a column')
     subparsers.add_parser('g', help='give descriptive statistics by group(s)')
+    subparsers.add_parser('cfa', help='run confirmatory factor analysis')
     subparsers.add_parser('efa', help='run exploratory factor analysis')
     subparsers.add_parser('tea', help='transfer fixed factor to exploratory analysis')
     subparsers.add_parser('dir', help='create folder(s)')
@@ -2257,6 +2858,8 @@ def __init__():
         independent_sample_t_test_v2()
     elif args.subcommand == 'eo':
         one_way_anova_v2()
+    elif args.subcommand == 'cfa':
+        run_cfa()
     elif args.subcommand == 'efa':
         run_efa()
     elif args.subcommand == 'tea':
