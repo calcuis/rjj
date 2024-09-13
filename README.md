@@ -246,7 +246,7 @@ rjj cfa
 ```
 *draw svg factor diagram; you might need [graphviz](https://www.graphviz.org/download/) for rendering dot language to graph object (optional)* 
 ### pizza analysis 🍕
-heat the kitchen for a pie 🥧
+heat the kitchen up for a pie 🥧
 ```
 rjj pie
 ```
