@@ -1,5 +1,7 @@
 ### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.6.4-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis tool 🛠⚙
+
+[<img src="https://raw.githubusercontent.com/calcuis/rjj/master/rjj.gif" width="128" height="128">](https://github.com/calcuis/rjj)
 #### install it via pip/pip3
 ```
 pip install rjj
