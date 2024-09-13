@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.6.4"
+__version__="0.6.5"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -2625,6 +2625,9 @@ def run_cfa():
         items = []
         for i in range(n_items):
             item = input(f"Enter the column name for item {i+1} of Factor {factor}: ")
+            if item not in data.columns:
+                print(f"Column '{item}' not found in the CSV file. Exiting.")
+                return
             items.append(item)
             all_items.append(item)
         factor_items[f"Factor {factor}"] = items
