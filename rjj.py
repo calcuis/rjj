@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.6.5"
+__version__="0.6.6"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -1361,12 +1361,12 @@ def xjoint():
     else:
         print(f"No excel files are available in the current directory.")
 
-POSSIBLE_SVDS = ["randomized", "lapack"]
-POSSIBLE_IMPUTATIONS = ["mean", "median", "drop"]
-POSSIBLE_METHODS = ["ml", "mle", "uls", "minres", "principal"]
-ORTHOGONAL_ROTATIONS = ["varimax", "oblimax", "quartimax", "equamax", "geomin_ort"]
-OBLIQUE_ROTATIONS = ["promax", "oblimin", "quartimin", "geomin_obl"]
-POSSIBLE_ROTATIONS = ORTHOGONAL_ROTATIONS + OBLIQUE_ROTATIONS
+possible_svds = ["randomized", "lapack"]
+possible_imputations = ["mean", "median", "drop"]
+possible_methods = ["ml", "mle", "uls", "minres", "principal"]
+orthogonal_rotations = ["varimax", "oblimax", "quartimax", "equamax", "geomin_ort"]
+oblique_rotations = ["promax", "oblimin", "quartimin", "geomin_obl"]
+possible_rotations = orthogonal_rotations + oblique_rotations
 
 class Rotator(BaseEstimator):
     def __init__(
@@ -1606,14 +1606,14 @@ class Rotator(BaseEstimator):
             (new_loadings, new_rotation_mtx) = self._varimax(X)
         elif method == "promax":
             (new_loadings, new_rotation_mtx, phi) = self._promax(X)
-        elif method in OBLIQUE_ROTATIONS:
+        elif method in oblique_rotations:
             (new_loadings, new_rotation_mtx, phi) = self._oblique(X, method)
-        elif method in ORTHOGONAL_ROTATIONS:
+        elif method in orthogonal_rotations:
             (new_loadings, new_rotation_mtx) = self._orthogonal(X, method)
         else:
             raise ValueError(
                 "The value for `method` must be one of the "
-                "following: {}.".format(", ".join(POSSIBLE_ROTATIONS))
+                "following: {}.".format(", ".join(possible_rotations))
             )
         (self.loadings_, self.rotation_, self.phi_) = (
             new_loadings,
@@ -1746,32 +1746,32 @@ class eAnalyzor(BaseEstimator, TransformerMixin):
         self.rotation = (
             self.rotation.lower() if isinstance(self.rotation, str) else self.rotation
         )
-        if self.rotation not in POSSIBLE_ROTATIONS + [None]:
+        if self.rotation not in possible_rotations + [None]:
             raise ValueError(
-                f"The rotation must be one of the following: {POSSIBLE_ROTATIONS + [None]}"
+                f"The rotation must be one of the following: {possible_rotations + [None]}"
             )
         self.method = (
             self.method.lower() if isinstance(self.method, str) else self.method
         )
-        if self.method not in POSSIBLE_METHODS:
+        if self.method not in possible_methods:
             raise ValueError(
-                f"The method must be one of the following: {POSSIBLE_METHODS}"
+                f"The method must be one of the following: {possible_methods}"
             )
         self.impute = (
             self.impute.lower() if isinstance(self.impute, str) else self.impute
         )
-        if self.impute not in POSSIBLE_IMPUTATIONS:
+        if self.impute not in possible_imputations:
             raise ValueError(
-                f"The imputation must be one of the following: {POSSIBLE_IMPUTATIONS}"
+                f"The imputation must be one of the following: {possible_imputations}"
             )
         self.svd_method = (
             self.svd_method.lower()
             if isinstance(self.svd_method, str)
             else self.svd_method
         )
-        if self.svd_method not in POSSIBLE_SVDS:
+        if self.svd_method not in possible_svds:
             raise ValueError(
-                f"The SVD method must be one of the following: {POSSIBLE_SVDS}"
+                f"The SVD method must be one of the following: {possible_svds}"
             )
         if self.method == "principal" and self.is_corr_matrix:
             raise ValueError(
@@ -1930,7 +1930,7 @@ class eAnalyzor(BaseEstimator, TransformerMixin):
                 phi = np.dot(np.dot(np.diag(signs), phi), np.diag(signs))
                 structure = (
                     np.dot(loadings, phi)
-                    if self.rotation in OBLIQUE_ROTATIONS
+                    if self.rotation in oblique_rotations
                     else None
                 )
         if self.method != "principal":
