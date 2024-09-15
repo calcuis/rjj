@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.7.0-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.7.1-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis wizard 👻🛠⚙
 
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/rjj.gif" width="128" height="128">](https://github.com/calcuis/rjj)
@@ -226,7 +226,7 @@ run model fit analysis of regression 📏
 ```
 rjj fit
 ```
-*evaluate three commonly used models (by R²): linear, quadratic and cubic; opt which one fits you most*
+*evaluate three commonly used models (by R²): linear, quadratic and cubic; see which one fits your data most*
 ### reliability test
 run reliability analysis for a hypothetical construct; cheers! 🍻
 ```
