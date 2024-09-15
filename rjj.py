@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.6.9"
+__version__="0.7.0"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -988,9 +988,9 @@ def run_regression():
     formula_quadratic = get_regression_formula(intercept_quadratic, coef_quadratic, degree=2)
     r2_cubic, model_cubic, intercept_cubic, coef_cubic = fit_and_evaluate(X, Y, degree=3)
     formula_cubic = get_regression_formula(intercept_cubic, coef_cubic, degree=3)
-    print(f"\nR² for Linear (y = β0 + m*x) [Regression]    : {r2_linear:.5f}")
-    print(f"R² for Quadratic (y = β0 + m1*x + m2*x²)     : {r2_quadratic:.5f}")
-    print(f"R² for Cubic (y = β0 + m1*x + m2*x² + m3*x³) : {r2_cubic:.5f}")
+    print(f"\nR² for Linear (y = β0 + β1*x) [Regression]    : {r2_linear:.5f}")
+    print(f"R² for Quadratic (y = β0 + β1*x + β2*x²)     : {r2_quadratic:.5f}")
+    print(f"R² for Cubic (y = β0 + β1*x + β2*x² + β3*x³) : {r2_cubic:.5f}")
     ask = input("\nDo you want a plot? (Y/n) ")
     if ask.lower() == "n":
         print("Do tell me when you wneed a plot next time; thank you!")
