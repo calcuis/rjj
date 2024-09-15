@@ -224,7 +224,7 @@ rjj ra
 ### regression model fit analysis
 run model fit analysis of regression 📏
 ```
-rjj ra
+rjj fit
 ```
 *evaluate three commonly used models (by R²): linear, quadratic and cubic; opt which one fits you most*
 ### reliability test
