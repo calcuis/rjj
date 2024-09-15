@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.6.8"
+__version__="0.6.9"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -923,18 +923,6 @@ def pa_ra():
     print(f"\nSimple/multiple regression with {num_predictors} predictors, α={alpha}, power={power}, f²={r2/(1-r2):.3f}")
     print(f"Estimated minimum sample size required: {min_sample_size}")
 
-def fit_and_evaluate(X, Y, degree):
-    from sklearn.preprocessing import PolynomialFeatures
-    poly_features = PolynomialFeatures(degree=degree)
-    X_poly = poly_features.fit_transform(X)
-    from sklearn.linear_model import LinearRegression
-    model = LinearRegression()
-    model.fit(X_poly, Y)
-    y_pred = model.predict(X_poly)
-    from sklearn.metrics import r2_score
-    r2 = r2_score(Y, y_pred)
-    return r2, model
-
 def load_and_process_data():
     csv_files = list_csv_files()
     if not csv_files:
@@ -971,14 +959,38 @@ def r_plot_results(X, Y, x_col, y_col, r2_linear, r2_quadratic, r2_cubic, model_
     canvas.draw()
     canvas.get_tk_widget().pack()
 
+def fit_and_evaluate(X, Y, degree):
+    from sklearn.preprocessing import PolynomialFeatures
+    poly_features = PolynomialFeatures(degree=degree)
+    X_poly = poly_features.fit_transform(X)
+    from sklearn.linear_model import LinearRegression
+    model = LinearRegression()
+    model.fit(X_poly, Y)
+    y_pred = model.predict(X_poly)
+    from sklearn.metrics import r2_score
+    r2 = r2_score(Y, y_pred)
+    return r2, model, model.intercept_, model.coef_
+
+def get_regression_formula(intercept, coefficients, degree):
+    formula = f"y = {intercept:.5f}"
+    for i in range(1, len(coefficients)):
+        if degree == 1:
+            formula += f" + {coefficients[i]:.5f}*x"
+        else:
+            formula += f" + {coefficients[i]:.5f}*x^{i}"
+    return formula
+
 def run_regression():
     X, Y, x_col, y_col = load_and_process_data()
-    r2_linear, model_linear = fit_and_evaluate(X, Y, degree=1)
-    r2_quadratic, model_quadratic = fit_and_evaluate(X, Y, degree=2)
-    r2_cubic, model_cubic = fit_and_evaluate(X, Y, degree=3)
-    print(f"\nR² for Linear Regression   : {r2_linear:.5f}")
-    print(f"R² for Quadratic Regression: {r2_quadratic:.5f}")
-    print(f"R² for Cubic Regression    : {r2_cubic:.5f}")
+    r2_linear, model_linear, intercept_linear, coef_linear = fit_and_evaluate(X, Y, degree=1)
+    formula_linear = get_regression_formula(intercept_linear, coef_linear, degree=1)
+    r2_quadratic, model_quadratic, intercept_quadratic, coef_quadratic = fit_and_evaluate(X, Y, degree=2)
+    formula_quadratic = get_regression_formula(intercept_quadratic, coef_quadratic, degree=2)
+    r2_cubic, model_cubic, intercept_cubic, coef_cubic = fit_and_evaluate(X, Y, degree=3)
+    formula_cubic = get_regression_formula(intercept_cubic, coef_cubic, degree=3)
+    print(f"\nR² for Linear (y = β0 + m*x) [Regression]    : {r2_linear:.5f}")
+    print(f"R² for Quadratic (y = β0 + m1*x + m2*x²)     : {r2_quadratic:.5f}")
+    print(f"R² for Cubic (y = β0 + m1*x + m2*x² + m3*x³) : {r2_cubic:.5f}")
     ask = input("\nDo you want a plot? (Y/n) ")
     if ask.lower() == "n":
         print("Do tell me when you wneed a plot next time; thank you!")
@@ -988,6 +1000,9 @@ def run_regression():
         icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
         root.iconphoto(False, icon)
         root.title("rjj")
+        tk.Label(root, text=f"Formula of Linear Regression: {formula_linear}").pack()
+        tk.Label(root, text=f"Formula of Quadratic Regression: {formula_quadratic}").pack()
+        tk.Label(root, text=f"Formula of Cubic Regression: {formula_cubic}").pack()
         r_plot_results(X, Y, x_col, y_col, r2_linear, r2_quadratic, r2_cubic, model_linear, model_quadratic, model_cubic, root)
         root.mainloop()
 
