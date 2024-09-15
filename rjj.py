@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.6.6"
+__version__="0.6.7"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -922,6 +922,74 @@ def pa_ra():
     min_sample_size = regression_power_analysis(r2, alpha, power, num_predictors)
     print(f"\nSimple/multiple regression with {num_predictors} predictors, α={alpha}, power={power}, f^2={r2/(1-r2):.3f}")
     print(f"Estimated minimum sample size required: {min_sample_size}")
+
+def fit_and_evaluate(X, Y, degree):
+    from sklearn.preprocessing import PolynomialFeatures
+    poly_features = PolynomialFeatures(degree=degree)
+    X_poly = poly_features.fit_transform(X)
+    from sklearn.linear_model import LinearRegression
+    model = LinearRegression()
+    model.fit(X_poly, Y)
+    y_pred = model.predict(X_poly)
+    from sklearn.metrics import r2_score
+    r2 = r2_score(Y, y_pred)
+    return r2, model
+
+def load_and_process_data():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    selected_file = select_csv_file(csv_files)
+    data = pd.read_csv(selected_file)
+    x_col = input(f"Available columns: {list(data.columns)}\nSelect the column for the independent variable (X): ")
+    if x_col not in data.columns:
+        print(f"Column '{x_col}' not found in the CSV file. Exiting.")
+        quit()
+    y_col = input(f"Select the column for the dependent variable (Y): ")
+    if y_col not in data.columns:
+        print(f"Column '{y_col}' not found in the CSV file. Exiting.")
+        quit()
+    X = data[[x_col]].values
+    Y = data[y_col].values
+    return X, Y, x_col, y_col
+
+def r_plot_results(X, Y, x_col, y_col, r2_linear, r2_quadratic, r2_cubic, model_linear, model_quadratic, model_cubic, window):
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    ax.scatter(X, Y, color='gray', label='Data')
+    from sklearn.preprocessing import PolynomialFeatures
+    ax.plot(X, model_linear.predict(PolynomialFeatures(degree=1).fit_transform(X)), color='blue', label=f'Linear Fit (R²={r2_linear:.3f})')
+    ax.plot(X, model_quadratic.predict(PolynomialFeatures(degree=2).fit_transform(X)), color='green', label=f'Quadratic Fit (R²={r2_quadratic:.3f})')
+    ax.plot(X, model_cubic.predict(PolynomialFeatures(degree=3).fit_transform(X)), color='red', label=f'Cubic Fit (R²={r2_cubic:.3f})')
+    ax.set_xlabel(x_col)
+    ax.set_ylabel(y_col)
+    ax.legend()
+    ax.set_title('Regression Model Comparison')
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    canvas = FigureCanvasTkAgg(fig, master=window)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+
+def run_regression():
+    X, Y, x_col, y_col = load_and_process_data()
+    r2_linear, model_linear = fit_and_evaluate(X, Y, degree=1)
+    r2_quadratic, model_quadratic = fit_and_evaluate(X, Y, degree=2)
+    r2_cubic, model_cubic = fit_and_evaluate(X, Y, degree=3)
+    print(f"\nR² for Linear Regression: {r2_linear:.5f}")
+    print(f"R² for Quadratic Regression: {r2_quadratic:.5f}")
+    print(f"R² for Cubic Regression: {r2_cubic:.5f}")
+    ask = input("\nDo you want a plot? (Y/n) ")
+    if ask.lower() == "n":
+        print("Do tell me when you wneed a plot next time; thank you!")
+    else:
+        import tkinter as tk
+        root = tk.Tk()
+        icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
+        root.iconphoto(False, icon)
+        root.title("rjj")
+        r_plot_results(X, Y, x_col, y_col, r2_linear, r2_quadratic, r2_cubic, model_linear, model_quadratic, model_cubic, root)
+        root.mainloop()
 
 def binder():
     ask = input("Give a name to the output file (Y/n)? ")
@@ -2762,6 +2830,7 @@ def __init__():
     subparsers.add_parser('cfa', help='run confirmatory factor analysis')
     subparsers.add_parser('efa', help='run exploratory factor analysis')
     subparsers.add_parser('tea', help='transfer fixed factor to exploratory analysis')
+    subparsers.add_parser('fit', help='run regression model fit analysis')
     subparsers.add_parser('dir', help='create folder(s)')
     subparsers.add_parser('pie', help='draw a pie chart')
     subparsers.add_parser('bar', help='draw a bar chart')
@@ -2869,6 +2938,8 @@ def __init__():
         run_efa()
     elif args.subcommand == 'tea':
         run_efa_fixed()
+    elif args.subcommand == 'fit':
+        run_regression()
     elif args.subcommand == 'pp':
         pa_pt()
     elif args.subcommand == 'pi':
