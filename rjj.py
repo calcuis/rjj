@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.6.7"
+__version__="0.6.8"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -109,7 +109,7 @@ def one_way_anova_v2():
     print(f"p-value = {p_value:.4f}")
     print(f"Effect Size (Cohen's f): {cohen_f:.4f}")
     print(f"Power (1-β): {power:.4f}")
-    print("\nEffect Size calculation based on η^2:")
+    print("\nEffect Size calculation based on η²:")
     print(f"Effect Size (Eta Squared)    : {eta_squared:.4f}")
     print(f"Sum of Squares Between Groups: {ss_between:.4f}")
     print(f"Sum of Squares Within Groups : {ss_total-ss_between:.4f}")
@@ -117,7 +117,7 @@ def one_way_anova_v2():
     if p_value <= 0.01: p = "p < .01"
     elif p_value < 0.05 and p_value > 0.01: p = "p < .05"
     else: p = f"p = {p_value:.3f}"
-    print(f"\nJournal/report format:\nF({df_between}, {df_within}) = {f_statistic:.3f}, {p}, η^2 = {eta_squared:.2f}")
+    print(f"\nJournal/report format:\nF({df_between}, {df_within}) = {f_statistic:.3f}, {p}, η² = {eta_squared:.2f}")
     from statsmodels.stats.multicomp import pairwise_tukeyhsd
     tukey = pairwise_tukeyhsd(endog=data[value_column], 
                               groups=data[group_column], 
@@ -915,12 +915,12 @@ def regression_power_analysis(r2, alpha, power, num_predictors):
     return math.ceil(n)
 
 def pa_ra():
-    r2 = float(input("Enter the effect size R^2 (e.g., 0.13): "))
+    r2 = float(input("Enter the effect size R² (e.g., 0.13): "))
     alpha = float(input("Enter the alpha level  (e.g., 0.05): "))
     power = float(input("Enter the desired power (e.g., 0.8): "))
     num_predictors = int(input("Enter the number of predictors: "))
     min_sample_size = regression_power_analysis(r2, alpha, power, num_predictors)
-    print(f"\nSimple/multiple regression with {num_predictors} predictors, α={alpha}, power={power}, f^2={r2/(1-r2):.3f}")
+    print(f"\nSimple/multiple regression with {num_predictors} predictors, α={alpha}, power={power}, f²={r2/(1-r2):.3f}")
     print(f"Estimated minimum sample size required: {min_sample_size}")
 
 def fit_and_evaluate(X, Y, degree):
@@ -976,9 +976,9 @@ def run_regression():
     r2_linear, model_linear = fit_and_evaluate(X, Y, degree=1)
     r2_quadratic, model_quadratic = fit_and_evaluate(X, Y, degree=2)
     r2_cubic, model_cubic = fit_and_evaluate(X, Y, degree=3)
-    print(f"\nR² for Linear Regression: {r2_linear:.5f}")
+    print(f"\nR² for Linear Regression   : {r2_linear:.5f}")
     print(f"R² for Quadratic Regression: {r2_quadratic:.5f}")
-    print(f"R² for Cubic Regression: {r2_cubic:.5f}")
+    print(f"R² for Cubic Regression    : {r2_cubic:.5f}")
     ask = input("\nDo you want a plot? (Y/n) ")
     if ask.lower() == "n":
         print("Do tell me when you wneed a plot next time; thank you!")
