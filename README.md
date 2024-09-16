@@ -47,7 +47,7 @@ rjj i
 #### outer join 🖇
 outer join two csv files
 ```
-rjj i
+rjj o
 ```
 *join record(s) based on value(s) in 1st column; identical value(s) will be overlapped*
 #### detector
