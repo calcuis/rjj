@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.7.2"
+__version__="0.7.3"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -64,6 +64,41 @@ def clean_data(df, columns):
     df = df[columns].replace([np.inf, -np.inf], np.nan)
     df = df.dropna()
     return df
+
+def innerj():
+    csv_files = [file for file in os.listdir() if file.endswith('.csv')]
+    if csv_files:
+        print("CSV file(s) available. Select the 1st csv file:")
+        for index, file_name in enumerate(csv_files, start=1):
+            print(f"{index}. {file_name}")
+        choice = input(f"Enter your choice (1 to {len(csv_files)}): ")
+        choice_index=int(choice)-1
+        file1=csv_files[choice_index]
+        print("CSV file(s) available. Select the 2nd csv file:")
+        for index, file_name in enumerate(csv_files, start=1):
+            print(f"{index}. {file_name}")
+        choice = input(f"Enter your choice (1 to {len(csv_files)}): ")
+        choice_index=int(choice)-1
+        file2=csv_files[choice_index]
+        ask = input("Enter another file name instead of output (Y/n)? ")
+        if  ask.lower() == 'y':
+                given = input("Give a name to the output file: ")
+                output=given
+        else:
+                output="output"
+        try:
+            df1 = pd.read_csv(file1)
+            df2 = pd.read_csv(file2)
+            first_column_file1 = df1.columns[0]
+            first_column_file2 = df2.columns[0]
+            merged_df = pd.merge(df1, df2, left_on=first_column_file1, right_on=first_column_file2, how='inner')
+            output_file = f"{output}.csv"
+            merged_df.to_csv(output_file, index=False)
+            print(f"Inner join completed and saved to {output_file}")
+        except (ValueError, IndexError):
+            print("Invalid choice. Please enter a valid number.")
+    else:
+        print("No CSV files are available in the current directory.")
 
 def eraser():
     import tkinter as tk
@@ -2839,6 +2874,7 @@ def __init__():
     subparsers.add_parser('m', help='identify matched record(s)')
     subparsers.add_parser('u', help='identify unique record(s)')
     subparsers.add_parser('d', help='detect co-existing record(s)')
+    subparsers.add_parser('i', help='inner join two csv files')
     subparsers.add_parser('b', help='bind all csv(s) by column(s)')
     subparsers.add_parser('j', help='joint all csv(s) together')
     subparsers.add_parser('s', help='split csv to piece(s)')
@@ -2926,6 +2962,8 @@ def __init__():
         eraser()
     elif args.subcommand == 'd':
         detector()
+    elif args.subcommand == 'i':
+        innerj()
     elif args.subcommand == 'c':
         convertor()
     elif args.subcommand == 'r':
