@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.7.2-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.7.3-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis wizard 👻🛠⚙
 
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/rjj.gif" width="128" height="128">](https://github.com/calcuis/rjj)
@@ -38,6 +38,12 @@ erase duplicate record(s) 🧽
 rjj e
 ```
 *remove repeated row(s) for a selected csv file*
+#### inner join 🖇
+inner join two csv files
+```
+rjj i
+```
+*join record(s) based on identifical value(s) in 1st column*
 #### detector
 detect the co-existing record(s) between two csv files📃🔍📃
 ```
