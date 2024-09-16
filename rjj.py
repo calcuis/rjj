@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.7.1"
+__version__="0.7.2"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -64,6 +64,32 @@ def clean_data(df, columns):
     df = df[columns].replace([np.inf, -np.inf], np.nan)
     df = df.dropna()
     return df
+
+def eraser():
+    import tkinter as tk
+    root = tk.Tk()
+    icon = tk.PhotoImage(file = os.path.join(os.path.dirname(__file__), "icon.png"))
+    root.iconphoto(False, icon)
+    root.title("rjj")
+    root.withdraw()
+    from tkinter.filedialog import askopenfilename, asksaveasfilename
+    input_file = askopenfilename(title="Select CSV file", filetypes=[("CSV files", "*.csv")])
+    if not input_file:
+        print("No file selected. Exiting...")
+        return
+    try:
+        df = pd.read_csv(input_file)
+        print(f"Data loaded from {input_file}")
+    except Exception as e:
+        print(f"Error reading the file: {e}")
+        return
+    df_cleaned = df.drop_duplicates()
+    output_file = asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")], title="Save the cleaned file as")
+    if not output_file:
+        print("No file selected for saving. Exiting...")
+        return
+    df_cleaned.to_csv(output_file, index=False)
+    print(f"Cleaned data saved to {output_file}")
 
 def mk_dir():
     csv_files = list_csv_files()
@@ -2809,6 +2835,7 @@ def __init__():
     subparsers.add_parser('a', help='run file anlaysis')
     subparsers.add_parser('c', help='convert json to csv')
     subparsers.add_parser('r', help='convert csv to json')
+    subparsers.add_parser('e', help='erase duplicate record(s)')
     subparsers.add_parser('m', help='identify matched record(s)')
     subparsers.add_parser('u', help='identify unique record(s)')
     subparsers.add_parser('d', help='detect co-existing record(s)')
@@ -2895,6 +2922,8 @@ def __init__():
         binder()
     elif args.subcommand == 'f':
         filter()
+    elif args.subcommand == 'e':
+        eraser()
     elif args.subcommand == 'd':
         detector()
     elif args.subcommand == 'c':
