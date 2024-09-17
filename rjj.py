@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.7.4"
+__version__="0.7.5"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -2955,6 +2955,7 @@ def __init__():
     subparsers.add_parser('box', help='draw many boxplot(s)')
     subparsers.add_parser('map', help='map from god view')
     subparsers.add_parser('donut', help='bake a donut')
+    subparsers.add_parser('home', help='go home')
     args = parser.parse_args()
     if args.subcommand == 'a':
         base_directory = os.getcwd()
@@ -2988,6 +2989,10 @@ def __init__():
         else:
             output='output'
         jointer(output)
+    elif args.subcommand == 'home':
+        print("activating browser...")
+        import webbrowser
+        webbrowser.open("https://7look.org")
     elif args.subcommand == 's':
         spliter()
     elif args.subcommand == 'b':
