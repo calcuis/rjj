@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.7.4-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.7.5-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis wizard 👻🛠⚙
 
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/rjj.gif" width="128" height="128">](https://github.com/calcuis/rjj)
@@ -328,3 +328,8 @@ rjj donut
 ```
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/demo5.jpg" width="350" height="280">](https://github.com/calcuis/rjj/blob/main/demo5.jpg)
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/demo4.jpg" width="350" height="280">](https://github.com/calcuis/rjj/blob/main/demo4.jpg)
+#### home
+vist rjj's dirty house 👻[7look](https://7look.org)🏰
+```
+rjj home
+```
