@@ -43,7 +43,7 @@ join all csv(s) together (repeated records accepted)
 ```
 rjj join
 ```
-*pure join; will not create identifier(s); different from jointer below*
+*pure join; will not create identifier(s); differ from jointer below*
 #### inner join 🖇
 inner join two csv files
 ```
