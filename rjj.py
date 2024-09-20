@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.7.5"
+__version__="0.7.6"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -64,6 +64,21 @@ def clean_data(df, columns):
     df = df[columns].replace([np.inf, -np.inf], np.nan)
     df = df.dropna()
     return df
+
+def joint():
+    csv_files = [file for file in os.listdir() if file.endswith('.csv')]
+    dataframes = []
+    for file in csv_files:
+        df = pd.read_csv(file)
+        dataframes.append(df)
+    combined_df = pd.concat(dataframes, ignore_index=True)
+    ask = input("Enter another file name instead of output (Y/n)? ")
+    if  ask.lower() == 'y':
+            given = input("Give a name to the output file: ")
+            output=given
+    else:
+            output="output"
+    combined_df.to_csv(f'{output}.csv', index=False)
 
 def innerj():
     csv_files = [file for file in os.listdir() if file.endswith('.csv')]
@@ -2955,6 +2970,7 @@ def __init__():
     subparsers.add_parser('box', help='draw many boxplot(s)')
     subparsers.add_parser('map', help='map from god view')
     subparsers.add_parser('donut', help='bake a donut')
+    subparsers.add_parser('join', help='pure join')
     subparsers.add_parser('home', help='go home')
     args = parser.parse_args()
     if args.subcommand == 'a':
@@ -2993,6 +3009,8 @@ def __init__():
         print("activating browser...")
         import webbrowser
         webbrowser.open("https://7look.org")
+    elif args.subcommand == 'join':
+        joint()
     elif args.subcommand == 's':
         spliter()
     elif args.subcommand == 'b':
