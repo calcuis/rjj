@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.7.6"
+__version__="0.7.7"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -66,7 +66,7 @@ def clean_data(df, columns):
     return df
 
 def joint():
-    csv_files = [file for file in os.listdir() if file.endswith('.csv')]
+    csv_files = list_csv_files()
     dataframes = []
     for file in csv_files:
         df = pd.read_csv(file)
@@ -81,7 +81,7 @@ def joint():
     combined_df.to_csv(f'{output}.csv', index=False)
 
 def innerj():
-    csv_files = [file for file in os.listdir() if file.endswith('.csv')]
+    csv_files = list_csv_files()
     if csv_files:
         print("CSV file(s) available. Select the 1st csv file:")
         for index, file_name in enumerate(csv_files, start=1):
@@ -116,7 +116,7 @@ def innerj():
         print("No CSV files are available in the current directory.")
 
 def outerj():
-    csv_files = [file for file in os.listdir() if file.endswith('.csv')]
+    csv_files = list_csv_files()
     if csv_files:
         print("CSV file(s) available. Select the 1st csv file:")
         for index, file_name in enumerate(csv_files, start=1):
@@ -2970,7 +2970,7 @@ def __init__():
     subparsers.add_parser('box', help='draw many boxplot(s)')
     subparsers.add_parser('map', help='map from god view')
     subparsers.add_parser('donut', help='bake a donut')
-    subparsers.add_parser('join', help='pure join')
+    subparsers.add_parser('join', help='join it up')
     subparsers.add_parser('home', help='go home')
     args = parser.parse_args()
     if args.subcommand == 'a':
