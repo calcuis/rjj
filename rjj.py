@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.7.7"
+__version__="0.7.8"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
