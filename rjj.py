@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.7.8"
+__version__="0.7.9"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -1371,6 +1371,36 @@ def kilter():
                         output_df = output_df._append(combined_row, ignore_index=True)
     output_df.to_excel(output, index=False)
     print(f"Results of mass filtering saved to '{output}'")
+
+def cluzter():
+    print("Select the CSV file...")
+    file_path = select_csv_file_gui()
+    with open(file_path, mode='r', newline='', encoding='utf-8') as file:
+        reader = csv.reader(file)
+        headers = next(reader)
+        if len(headers) < 2:
+            raise ValueError("The CSV file must contain at least two columns.")
+        name1 = input("Give a name to the 1st column: ")
+        name2 = input("Give a name to the 2nd column: ")
+        name3 = input("Give a name to the cluster field (under the 2nd column): ")
+        data = []
+        for row in reader:
+            code = row[0]
+            cluster_layer = row[1].split(',')
+            cluster_objects = [{name3: lang.strip()} for lang in cluster_layer]
+            data.append({
+                name1: code,
+                name2: cluster_objects
+            })
+    ask = input("Do you want to give a name to the file instead of output (Y/n)? ")
+    if ask.lower() == "y":
+        filename = input("Please enter a name: ")
+    else:
+        filename = "output"
+    output_path = f'{filename}.json'
+    with open(output_path, 'w', encoding='utf-8') as json_file:
+        json.dump(data, json_file, indent=4)
+    print(f"JSON file created successfully: {output_path}")
 
 def convertor():
     json_files = [file for file in os.listdir() if file.endswith('.json')]
@@ -2920,6 +2950,7 @@ def __init__():
     subparsers.add_parser('a', help='run file anlaysis')
     subparsers.add_parser('c', help='convert json to csv')
     subparsers.add_parser('r', help='convert csv to json')
+    subparsers.add_parser('z', help='convert csv to json cluster')
     subparsers.add_parser('e', help='erase duplicate record(s)')
     subparsers.add_parser('i', help='inner join two csv files')
     subparsers.add_parser('o', help='outer join two csv files')
@@ -3029,6 +3060,8 @@ def __init__():
         convertor()
     elif args.subcommand == 'r':
         reverser()
+    elif args.subcommand == 'z':
+        cluzter()
     elif args.subcommand == 'k':
         kilter()
     elif args.subcommand == 'x':
