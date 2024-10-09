@@ -37,7 +37,7 @@ convert csv to json with cluster layer
 ```
 rjj z
 ```
-*at least two columns; column 2 should contain clustered data, i.e., a,b,c*
+*at least two columns in the selected csv file; column 2 should contain clustered data, i.e., a,b,c*
 #### eraser
 erase duplicate record(s) 🧽
 ```
