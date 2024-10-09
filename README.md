@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.7.8-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.7.9-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis wizard 👻🛠⚙
 
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/rjj.gif" width="128" height="128">](https://github.com/calcuis/rjj)
@@ -32,6 +32,12 @@ reverse csv back to json
 rjj r
 ```
 *select a csv file in the current directory, choose to enter another file name for output or not (Y/n); if not, the converted json file will be saved with the same name; 🌀support any data type, even emoji*🐷
+#### cluster
+convert csv to json with cluster layer
+```
+rjj z
+```
+*at least two columns; column 2 should contain clustered data, i.e., a,b,c*
 #### eraser
 erase duplicate record(s) 🧽
 ```
