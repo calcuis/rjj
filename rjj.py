@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.7.9"
+__version__="0.8.0"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -64,6 +64,34 @@ def clean_data(df, columns):
     df = df[columns].replace([np.inf, -np.inf], np.nan)
     df = df.dropna()
     return df
+
+def csv_to_json():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    print("Available CSV files:")
+    for i, file in enumerate(csv_files, 1):
+        print(f"{i}. {file}")
+    try:
+        choice = int(input("Select the CSV file by entering the corresponding number: "))
+        csv_file = csv_files[choice - 1]
+    except (ValueError, IndexError):
+        print("Invalid selection.")
+        return
+    try:
+        df = pd.read_csv(csv_file)
+    except Exception as e:
+        print(f"Error reading the file: {e}")
+        return
+    json_data = df.to_dict(orient='records')
+    json_file_name = os.path.splitext(csv_file)[0] + '.json'
+    try:
+        with open(json_file_name, 'w', encoding='utf-8') as json_file:
+            json.dump(json_data, json_file, indent=4, ensure_ascii=False)
+        print(f"JSON file saved as '{json_file_name}'.")
+    except Exception as e:
+        print(f"Error saving the JSON file: {e}")
 
 def joint():
     csv_files = list_csv_files()
@@ -2950,6 +2978,7 @@ def __init__():
     subparsers.add_parser('a', help='run file anlaysis')
     subparsers.add_parser('c', help='convert json to csv')
     subparsers.add_parser('r', help='convert csv to json')
+    subparsers.add_parser('y', help='convert csv to json yo')
     subparsers.add_parser('z', help='convert csv to json cluster')
     subparsers.add_parser('e', help='erase duplicate record(s)')
     subparsers.add_parser('i', help='inner join two csv files')
@@ -3060,6 +3089,8 @@ def __init__():
         convertor()
     elif args.subcommand == 'r':
         reverser()
+    elif args.subcommand == 'y':
+        csv_to_json()
     elif args.subcommand == 'z':
         cluzter()
     elif args.subcommand == 'k':
