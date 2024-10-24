@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.8.1"
+__version__="0.8.2"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -13,51 +13,48 @@ import scipy as sp
 import numpy as np
 import pandas as pd
 
-# Initialize PDF class
-class PDF(FPDF):
-    def header(self):
-        pass  # No automatic header
-    def footer(self):
-        pass  # No automatic footer
+def list_csv_files():
+    return [f for f in os.listdir() if f.endswith('.csv')]
 
 def generate_report(pdf, id_val, name_val, records):
-    # Set title
     pdf.set_font('Arial', 'B', 16)
     pdf.cell(0, 10, f"{id_val} - {name_val}", 0, 1, 'C')
     pdf.ln(5)
-    # Calculate table width and margins for centering
-    table_col_widths = [50, 30, 30]  # Widths for 'Group', 'Count', 'Minute'
+    table_col_widths = [50, 30, 30]
     table_width = sum(table_col_widths)
     page_width = pdf.w - 2 * pdf.l_margin
     table_x_margin = (page_width - table_width) / 2
-    # Set table headers for group, count, and minutes
     pdf.set_font('Arial', 'B', 12)
-    pdf.set_x(pdf.l_margin + table_x_margin)  # Center the table
+    pdf.set_x(pdf.l_margin + table_x_margin)
     pdf.cell(table_col_widths[0], 10, 'Group', 1, 0, 'C')
     pdf.cell(table_col_widths[1], 10, 'Count', 1, 0, 'C')
     pdf.cell(table_col_widths[2], 10, 'Minute', 1, 1, 'C')
-    # Fill table with 'group', count, and 'min' values
     pdf.set_font('Arial', '', 12)
     total_min = 0
     total_count = 0
     group_summary = records.groupby('group').agg(count=('group', 'size'), total_min=('min', 'sum')).reset_index()
     for _, row in group_summary.iterrows():
-        pdf.set_x(pdf.l_margin + table_x_margin)  # Center the table rows
+        pdf.set_x(pdf.l_margin + table_x_margin)
         pdf.cell(table_col_widths[0], 10, row['group'], 1, 0, 'C')
         pdf.cell(table_col_widths[1], 10, str(row['count']), 1, 0, 'C')
         pdf.cell(table_col_widths[2], 10, str(row['total_min']), 1, 1, 'C')
         total_min += row['total_min']
         total_count += row['count']
-    # Display totals
     pdf.ln(5)
     pdf.set_font('Arial', 'B', 12)
-    pdf.set_x(pdf.l_margin + table_x_margin)  # Center the totals row
+    pdf.set_x(pdf.l_margin + table_x_margin)
     pdf.cell(table_col_widths[0], 10, 'Total', 1, 0, 'C')
     pdf.cell(table_col_widths[1], 10, str(total_count), 1, 0, 'C')
     pdf.cell(table_col_widths[2], 10, str(total_min), 1, 1, 'C')
 
+class PDF(FPDF):
+    def header(self):
+        pass
+    def footer(self):
+        pass
+
 def generate_reports():
-    csv_files = [file for file in os.listdir() if file.endswith('.csv')]
+    csv_files = list_csv_files()
     if csv_files:
         print("CSV file(s) available. Select which one to use:")
         for index, file_name in enumerate(csv_files, start=1):
@@ -67,17 +64,12 @@ def generate_reports():
             choice_index=int(choice)-1
             selected_file=csv_files[choice_index]
             print(f"File: {selected_file} is selected!")
-            # import pandas as pd
             df = pd.read_csv(selected_file)
-            # Group data by 'id' and 'name'
             grouped = df.groupby(['id', 'name'])
-            # Generate PDF report for each group
             for (id_val, name_val), group in grouped:
                 pdf = PDF()
                 pdf.add_page()
-                # Generate the report for the current group
                 generate_report(pdf, id_val, name_val, group)
-                # Save PDF with id as the filename
                 pdf.output(f"{id_val}.pdf")
                 print(f"{id_val}.pdf created.")
             print("PDF reports generated successfully.")
@@ -86,9 +78,6 @@ def generate_reports():
     else:
         print("No CSV files are available in the current directory.")
         input("--- Press ENTER To Exit ---")
-
-def list_csv_files():
-    return [f for f in os.listdir() if f.endswith('.csv')]
 
 def select_csv_file(csv_files):
     print("Available CSV files:")
