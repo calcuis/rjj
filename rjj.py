@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.8.3"
+__version__="0.8.4"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -19,7 +19,7 @@ def list_csv_files():
 def generate_report(pdf, id_val, name_val, records):
     pdf.set_font('Arial', 'B', 16)
     pdf.cell(0, 10, f"{id_val} - {name_val}", 0, 1, 'C')
-    pdf.ln(5)
+    pdf.ln(10)
     table_col_widths = [50, 30, 30]
     table_width = sum(table_col_widths)
     page_width = pdf.w - 2 * pdf.l_margin
@@ -32,10 +32,13 @@ def generate_report(pdf, id_val, name_val, records):
     pdf.set_font('Arial', '', 12)
     total_min = 0
     total_count = 0
-    group_summary = records.groupby('group').agg(count=('group', 'size'), total_min=('min', 'sum')).reset_index()
+    group_summary = records.groupby(records.columns[2]).agg(
+        count=(records.columns[2], 'size'),
+        total_min=(records.columns[3], 'sum')
+    ).reset_index()
     for _, row in group_summary.iterrows():
         pdf.set_x(pdf.l_margin + table_x_margin)
-        pdf.cell(table_col_widths[0], 10, row['group'], 1, 0, 'C')
+        pdf.cell(table_col_widths[0], 10, str(row[records.columns[2]]), 1, 0, 'C')
         pdf.cell(table_col_widths[1], 10, str(row['count']), 1, 0, 'C')
         pdf.cell(table_col_widths[2], 10, str(row['total_min']), 1, 1, 'C')
         total_min += row['total_min']
@@ -65,7 +68,7 @@ def generate_reports():
             selected_file=csv_files[choice_index]
             print(f"File: {selected_file} is selected!")
             df = pd.read_csv(selected_file)
-            grouped = df.groupby(['id', 'name'])
+            grouped = df.groupby([df.columns[0], df.columns[1]])
             for (id_val, name_val), group in grouped:
                 pdf = PDF()
                 pdf.add_page()
