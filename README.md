@@ -347,7 +347,7 @@ rjj donut
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/demo5.jpg" width="350" height="280">](https://github.com/calcuis/rjj/blob/main/demo5.jpg)
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/demo4.jpg" width="350" height="280">](https://github.com/calcuis/rjj/blob/main/demo4.jpg)
 #### output
-generate output to csv and json; bete test with three columns: id, group, min (dynamic column names)
+generate output to csv and json; beta test with three columns: id, group, min (dynamic column names)
 ```
 rjj output
 ```
