@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.8.3-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.8.4-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis wizard 👻🛠⚙
 
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/rjj.gif" width="128" height="128">](https://github.com/calcuis/rjj)
@@ -347,12 +347,12 @@ rjj donut
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/demo5.jpg" width="350" height="280">](https://github.com/calcuis/rjj/blob/main/demo5.jpg)
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/demo4.jpg" width="350" height="280">](https://github.com/calcuis/rjj/blob/main/demo4.jpg)
 #### output
-generate output to csv and json; beta test with three columns: id, group, min (dynamic column names)
+generate csv and json output; beta test with columns: id, group, min (dynamic column names)
 ```
 rjj output
 ```
 #### report
-generate pdf report(s); beta test with columns: id, name, group, min (static column names)
+generate pdf report(s); beta test with columns: id, name, group, min (dynamic column names)
 ```
 rjj report
 ```
