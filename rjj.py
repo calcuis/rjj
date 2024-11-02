@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.8.2"
+__version__="0.8.3"
 
 import argparse, os, json, csv, glob, hashlib, warnings, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -95,6 +95,21 @@ def select_csv_file_gui():
     from tkinter import filedialog
     file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
     return file_path
+
+def output_as_csv_json():
+    input_file = select_csv_file_gui()
+    df = pd.read_csv(input_file)
+    col_id, col_group, col_min = df.columns[:3]
+    grouped_df = df.groupby([col_id, col_group], as_index=False)[col_min].sum()
+    grouped_df.to_csv('output.csv', index=False)
+    json_data = []
+    for id_value, group_data in grouped_df.groupby(col_id):
+        group_dict = {}
+        for _, row in group_data.iterrows():
+            group_dict[row[col_group]] = row[col_min]
+        json_data.append({col_id: id_value, col_group: [group_dict]})
+    with open('output.json', 'w') as json_file:
+        json.dump(json_data, json_file, indent=4)
 
 def select_column(df):
     print("Available columns:")
@@ -3094,6 +3109,7 @@ def __init__():
     subparsers.add_parser('box', help='draw many boxplot(s)')
     subparsers.add_parser('map', help='map from god view')
     subparsers.add_parser('donut', help='bake a donut')
+    subparsers.add_parser('output', help='output as csv and json')
     subparsers.add_parser('report', help='generate report')
     subparsers.add_parser('join', help='join it up')
     subparsers.add_parser('home', help='go home')
@@ -3138,6 +3154,8 @@ def __init__():
         joint()
     elif args.subcommand == 'report':
         generate_reports()
+    elif args.subcommand == 'output':
+        output_as_csv_json()
     elif args.subcommand == 's':
         spliter()
     elif args.subcommand == 'b':
