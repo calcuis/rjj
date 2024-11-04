@@ -1,8 +1,8 @@
 # !/usr/bin/env python3
 
-__version__="0.8.4"
+__version__="0.8.5"
 
-import argparse, os, json, csv, glob, hashlib, warnings, random, math
+import argparse, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
 from collections import defaultdict
 from datetime import datetime
@@ -81,6 +81,32 @@ def generate_reports():
     else:
         print("No CSV files are available in the current directory.")
         input("--- Press ENTER To Exit ---")
+
+def encode_base64(input_text):
+    encoded_bytes = base64.b64encode(input_text.encode('utf-8'))
+    encoded_text = encoded_bytes.decode('utf-8')
+    return encoded_text
+
+def decode_base64(encoded_text):
+    decoded_bytes = base64.b64decode(encoded_text.encode('utf-8'))
+    decoded_text = decoded_bytes.decode('utf-8')
+    return decoded_text
+
+def base64codeHandler():
+    choice = input("Do you want to encode or decode? (Enter 'encode' or 'decode'): ").strip().lower()
+    if choice == 'encode':
+        text_to_encode = input("Enter the text to encode: ")
+        encoded_text = encode_base64(text_to_encode)
+        print("Encoded text:", encoded_text)
+    elif choice == 'decode':
+        text_to_decode = input("Enter the Base64 text to decode: ")
+        try:
+            decoded_text = decode_base64(text_to_decode)
+            print("Decoded text:", decoded_text)
+        except Exception as e:
+            print("Error decoding text. Make sure it's valid Base64.")
+    else:
+        print("Invalid choice. Please enter 'encode' or 'decode'.")
 
 def select_csv_file(csv_files):
     print("Available CSV files:")
@@ -3114,6 +3140,7 @@ def __init__():
     subparsers.add_parser('donut', help='bake a donut')
     subparsers.add_parser('output', help='output as csv and json')
     subparsers.add_parser('report', help='generate report')
+    subparsers.add_parser('code', help='encode or decode')
     subparsers.add_parser('join', help='join it up')
     subparsers.add_parser('home', help='go home')
     args = parser.parse_args()
@@ -3155,6 +3182,8 @@ def __init__():
         webbrowser.open("https://7look.org")
     elif args.subcommand == 'join':
         joint()
+    elif args.subcommand == 'code':
+        base64codeHandler()
     elif args.subcommand == 'report':
         generate_reports()
     elif args.subcommand == 'output':
