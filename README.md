@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.8.5-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.8.6-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis wizard 👻🛠⚙
 
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/rjj.gif" width="128" height="128">](https://github.com/calcuis/rjj)
@@ -356,7 +356,12 @@ generate pdf report(s); beta test with columns: id, name, group, min (dynamic co
 ```
 rjj report
 ```
-#### coder
+#### minify
+minify js code/file
+```
+rjj minify
+```
+#### code
 encode and/or decode
 ```
 rjj code
