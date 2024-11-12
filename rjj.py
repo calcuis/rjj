@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.8.6"
+__version__="0.8.7"
 
 import argparse, io, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -15,6 +15,17 @@ import pandas as pd
 
 def list_csv_files():
     return [f for f in os.listdir() if f.endswith('.csv')]
+
+def json_merger():
+    merged_data = []
+    for filename in os.listdir('.'):
+        if filename.endswith('.json'):
+            with open(filename, 'r') as file:
+                data = json.load(file)
+                merged_data.extend(data)
+    with open('output.json', 'w') as outfile:
+        json.dump(merged_data, outfile, indent=4)
+    print("Merged JSON saved as output.json")
 
 def generate_report(pdf, id_val, name_val, records):
     pdf.set_font('Arial', 'B', 16)
@@ -3345,6 +3356,7 @@ def __init__():
     subparsers.add_parser('report', help='generate report')
     subparsers.add_parser('minify', help='minify js')
     subparsers.add_parser('code', help='encode or decode')
+    subparsers.add_parser('json', help='join all json up')
     subparsers.add_parser('join', help='join it up')
     subparsers.add_parser('home', help='go home')
     args = parser.parse_args()
@@ -3388,6 +3400,8 @@ def __init__():
         joint()
     elif args.subcommand == 'code':
         base64codeHandler()
+    elif args.subcommand == 'json':
+        json_merger()
     elif args.subcommand == 'minify':
         minifyjs()
     elif args.subcommand == 'report':
