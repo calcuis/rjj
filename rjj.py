@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.8.7"
+__version__="0.8.8"
 
 import argparse, io, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -16,6 +16,9 @@ import pandas as pd
 def list_csv_files():
     return [f for f in os.listdir() if f.endswith('.csv')]
 
+def list_json_files():
+    return [f for f in os.listdir() if f.endswith('.json')]
+
 def json_merger():
     merged_data = []
     for filename in os.listdir('.'):
@@ -26,6 +29,31 @@ def json_merger():
     with open('output.json', 'w') as outfile:
         json.dump(merged_data, outfile, indent=4)
     print("Merged JSON saved as output.json")
+
+def minify_json_file(file_name):
+    with open(file_name, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    with open(file_name, 'w', encoding='utf-8') as file:
+        json.dump(data, file, separators=(',', ':'), ensure_ascii=False)
+    print(f"File '{file_name}' has been minified.")
+
+def minify_json():
+    json_files = list_json_files()
+    if not json_files:
+        print("No JSON files found in the current directory.")
+        return
+    print("JSON files in the current directory:")
+    for idx, file in enumerate(json_files, start=1):
+        print(f"{idx}. {file}")
+    try:
+        choice = int(input("Select a JSON file to minify by entering its number: ")) - 1
+        if 0 <= choice < len(json_files):
+            selected_file = json_files[choice]
+            minify_json_file(selected_file)
+        else:
+            print("Invalid selection.")
+    except ValueError:
+        print("Invalid input. Please enter a number.")
 
 def generate_report(pdf, id_val, name_val, records):
     pdf.set_font('Arial', 'B', 16)
@@ -3355,6 +3383,7 @@ def __init__():
     subparsers.add_parser('output', help='output as csv and json')
     subparsers.add_parser('report', help='generate report')
     subparsers.add_parser('minify', help='minify js')
+    subparsers.add_parser('mj', help='minify json')
     subparsers.add_parser('code', help='encode or decode')
     subparsers.add_parser('json', help='join all json up')
     subparsers.add_parser('join', help='join it up')
@@ -3402,6 +3431,8 @@ def __init__():
         base64codeHandler()
     elif args.subcommand == 'json':
         json_merger()
+    elif args.subcommand == 'mj':
+        minify_json()
     elif args.subcommand == 'minify':
         minifyjs()
     elif args.subcommand == 'report':
