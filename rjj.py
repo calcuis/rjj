@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.8.8"
+__version__="0.8.9"
 
 import argparse, io, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -18,6 +18,39 @@ def list_csv_files():
 
 def list_json_files():
     return [f for f in os.listdir() if f.endswith('.json')]
+
+def list_html_files():
+    return [f for f in os.listdir() if f.endswith('.html')]
+
+def minify_html(html_content):
+    import re
+    html_content = re.sub(r'<!--.*?-->', '', html_content, flags=re.DOTALL)
+    html_content = re.sub(r'\s+', ' ', html_content).strip()
+    return html_content
+
+def html_minifier():
+    html_files = list_html_files()
+    if not html_files:
+        print("No HTML files found in the current directory.")
+        return
+    print("Select an HTML file to minify:")
+    for i, file_name in enumerate(html_files, start=1):
+        print(f"{i}. {file_name}")
+    try:
+        choice = int(input("Enter the number corresponding to the file: "))
+        if 1 <= choice <= len(html_files):
+            selected_file = html_files[choice - 1]
+            with open(selected_file, 'r', encoding='utf-8') as file:
+                content = file.read()
+            minified_content = minify_html(content)
+            output_file = f"{os.path.splitext(selected_file)[0]}_minified.html"
+            with open(output_file, 'w', encoding='utf-8') as file:
+                file.write(minified_content)
+            print(f"Minified HTML saved as {output_file}")
+        else:
+            print("Invalid choice.")
+    except ValueError:
+        print("Invalid input. Please enter a number.")
 
 def json_merger():
     merged_data = []
@@ -3384,6 +3417,7 @@ def __init__():
     subparsers.add_parser('report', help='generate report')
     subparsers.add_parser('minify', help='minify js')
     subparsers.add_parser('mj', help='minify json')
+    subparsers.add_parser('mh', help='minify html')
     subparsers.add_parser('code', help='encode or decode')
     subparsers.add_parser('json', help='join all json up')
     subparsers.add_parser('join', help='join it up')
@@ -3431,6 +3465,8 @@ def __init__():
         base64codeHandler()
     elif args.subcommand == 'json':
         json_merger()
+    elif args.subcommand == 'mh':
+        html_minifier()
     elif args.subcommand == 'mj':
         minify_json()
     elif args.subcommand == 'minify':
