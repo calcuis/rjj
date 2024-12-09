@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.8.9"
+__version__="0.9.0"
 
 import argparse, io, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -87,6 +87,37 @@ def minify_json():
             print("Invalid selection.")
     except ValueError:
         print("Invalid input. Please enter a number.")
+
+def compute_point():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    print("Available CSV files:")
+    for i, file in enumerate(csv_files, 1):
+        print(f"{i}. {file}")
+    try:
+        choice = int(input("Select the CSV file by entering the corresponding number: "))
+        csv_file = csv_files[choice - 1]
+    except (ValueError, IndexError):
+        print("Invalid selection.")
+        return
+    try:
+        output_file1 = 'output1.csv'
+        output_file2 = 'output2.csv'
+        df = pd.read_csv(csv_file)
+        session_sums = df.groupby('Session')['Score'].sum().reset_index()
+        session_sums.rename(columns={'Score': 'Sum'}, inplace=True)
+        df = df.merge(session_sums, on='Session', how='left')
+        df['Sum'] = df.apply(lambda row: row['Sum'] if df[df['Session'] == row['Session']].index[0] == row.name else '', axis=1)
+        df.to_csv(output_file1, index=False)
+        print(f"Stage 1 process completed; output saved to {output_file1}")
+        data = pd.read_csv(output_file1)
+        data['Point'] = data.apply(lambda row: row['Sum'] if pd.notnull(row['Sum']) and pd.notnull(row['Score']) and row['Sum'] > row['Score'] else None, axis=1)
+        data.to_csv(output_file2, index=False)
+        print(f"Stage 2 process completed; output saved to {output_file2}")
+    except Exception as e:
+        print(f"Error reading the file: {e}")
 
 def generate_report(pdf, id_val, name_val, records):
     pdf.set_font('Arial', 'B', 16)
@@ -3413,6 +3444,7 @@ def __init__():
     subparsers.add_parser('box', help='draw many boxplot(s)')
     subparsers.add_parser('map', help='map from god view')
     subparsers.add_parser('donut', help='bake a donut')
+    subparsers.add_parser('point', help='compute point')
     subparsers.add_parser('output', help='output as csv and json')
     subparsers.add_parser('report', help='generate report')
     subparsers.add_parser('minify', help='minify js')
@@ -3471,6 +3503,8 @@ def __init__():
         minify_json()
     elif args.subcommand == 'minify':
         minifyjs()
+    elif args.subcommand == 'point':
+        compute_point()
     elif args.subcommand == 'report':
         generate_reports()
     elif args.subcommand == 'output':
