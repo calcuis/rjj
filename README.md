@@ -357,7 +357,7 @@ generate pdf report(s); beta test with columns: id, name, group, min (dynamic co
 rjj report
 ```
 #### point
-compute point; beta test with columns: Session and Score; results will be stored in two newly created columns: Sum and Point
+compute point; beta test with columns: Session and Score; results will be stored in newly created columns: Sum and Point
 ```
 rjj point
 ```
