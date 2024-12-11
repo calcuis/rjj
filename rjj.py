@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.9.1"
+__version__="0.9.2"
 
 import argparse, io, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -111,6 +111,32 @@ def timestamp_cutter():
         df[['Year', 'Month', 'Day', 'Time']] = df['timestamp'].apply(
             lambda x: pd.Series(split_timestamp(x))
         )
+        output = "output.csv"
+        df.to_csv(output, index=False)
+        print(f"Results saved to {output}")
+    except Exception as e:
+        print(f"Error reading the file: {e}")
+
+def timestamp_glue():
+    csv_files = list_csv_files()
+    if not csv_files:
+        print("No CSV files found in the current directory.")
+        return
+    print("Available CSV files:")
+    for i, file in enumerate(csv_files, 1):
+        print(f"{i}. {file}")
+    try:
+        choice = int(input("Select the CSV file by entering the corresponding number: "))
+        csv_file = csv_files[choice - 1]
+    except (ValueError, IndexError):
+        print("Invalid selection.")
+        return
+    try:
+        df = pd.read_csv(csv_file)
+        df['timestamp'] = pd.to_datetime(df['Year'].astype(str) + '/' + 
+                                        df['Month'].astype(str) + '/' + 
+                                        df['Day'].astype(str) + ' ' + 
+                                        df['Time'])
         output = "output.csv"
         df.to_csv(output, index=False)
         print(f"Results saved to {output}")
@@ -3480,6 +3506,7 @@ def __init__():
     subparsers.add_parser('mj', help='minify json')
     subparsers.add_parser('mh', help='minify html')
     subparsers.add_parser('cut', help='cut timestamp')
+    subparsers.add_parser('glue', help='glue timestamp')
     subparsers.add_parser('code', help='encode or decode')
     subparsers.add_parser('json', help='join all json up')
     subparsers.add_parser('join', help='join it up')
@@ -3529,6 +3556,8 @@ def __init__():
         json_merger()
     elif args.subcommand == 'cut':
         timestamp_cutter()
+    elif args.subcommand == 'glue':
+        timestamp_glue()
     elif args.subcommand == 'mh':
         html_minifier()
     elif args.subcommand == 'mj':
