@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.9.3-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.9.4-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis wizard 👻🛠⚙
 
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/rjj.gif" width="128" height="128">](https://github.com/calcuis/rjj)
@@ -395,6 +395,11 @@ rjj json
 create a transparent png with specific width and height
 ```
 rjj png
+```
+#### gif
+create a gif animation with picture, transition time and loop specified
+```
+rjj gif
 ```
 #### code
 encode and/or decode
