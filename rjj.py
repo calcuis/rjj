@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.9.3"
+__version__="0.9.4"
 
 import argparse, io, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -38,6 +38,31 @@ def create_png():
         file_path="output.png"
     generate_png(file_path, int(png_width), int(png_height))
     print(f"PNG file generated at: {file_path}")
+
+def create_gif():
+    from PIL import Image
+    num_pictures = int(input("Enter the number of pictures to include in the animation: "))
+    input_files = []
+    for i in range(num_pictures):
+        filename = input(f"Enter the filename for picture {i + 1} (with .png extension): ")
+        input_files.append(filename)
+    transition_times = []
+    for i in range(num_pictures):
+        duration = int(input(f"Enter the transition time (ms) for picture {i + 1}: "))
+        transition_times.append(duration)
+    loop_number = int(input("Enter the loop number (0 for infinity): "))
+    frames = []
+    for file in input_files:
+        img = Image.open(file)
+        frames.append(img)
+    frames[0].save(
+        'output.gif', 
+        save_all=True, 
+        append_images=frames[1:], 
+        duration=transition_times, 
+        loop=loop_number
+    )
+    print("GIF animation created as 'output.gif'!")
 
 def minify_html(html_content):
     import re
@@ -3523,6 +3548,7 @@ def __init__():
     subparsers.add_parser('mj', help='minify json')
     subparsers.add_parser('mh', help='minify html')
     subparsers.add_parser('png', help='create transparent png')
+    subparsers.add_parser('gif', help='create gif animation')
     subparsers.add_parser('cut', help='cut timestamp')
     subparsers.add_parser('glue', help='glue timestamp')
     subparsers.add_parser('code', help='encode or decode')
@@ -3572,6 +3598,8 @@ def __init__():
         base64codeHandler()
     elif args.subcommand == 'json':
         json_merger()
+    elif args.subcommand == 'gif':
+        create_gif()
     elif args.subcommand == 'png':
         create_png()
     elif args.subcommand == 'cut':
