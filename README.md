@@ -397,7 +397,7 @@ create a transparent png with specific width and height
 rjj png
 ```
 #### gif
-create a gif animation with picture, transition time and loop specified
+create a gif animation with picture, transition time and loop specified 🎬
 ```
 rjj gif
 ```
