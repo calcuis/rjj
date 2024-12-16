@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.9.2"
+__version__="0.9.3"
 
 import argparse, io, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -21,6 +21,23 @@ def list_json_files():
 
 def list_html_files():
     return [f for f in os.listdir() if f.endswith('.html')]
+
+def generate_png(file_path, png_width, png_height):
+    from PIL import Image
+    image = Image.new("RGBA", (png_width, png_height), (0, 0, 0, 0))
+    image.save(file_path)
+
+def create_png():
+    png_width = input("Please provide the width in pixel (i.e., 1024): ")
+    png_height = input("Please provide the height in pixel (i.e., 768): ")
+    ask = input("Enter another file name instead of output (Y/n)? ")
+    if  ask.lower() == 'y':
+        given = input("Give a name to the output file: ")
+        file_path=given+".png"
+    else:
+        file_path="output.png"
+    generate_png(file_path, int(png_width), int(png_height))
+    print(f"PNG file generated at: {file_path}")
 
 def minify_html(html_content):
     import re
@@ -3505,6 +3522,7 @@ def __init__():
     subparsers.add_parser('minify', help='minify js')
     subparsers.add_parser('mj', help='minify json')
     subparsers.add_parser('mh', help='minify html')
+    subparsers.add_parser('png', help='create transparent png')
     subparsers.add_parser('cut', help='cut timestamp')
     subparsers.add_parser('glue', help='glue timestamp')
     subparsers.add_parser('code', help='encode or decode')
@@ -3554,6 +3572,8 @@ def __init__():
         base64codeHandler()
     elif args.subcommand == 'json':
         json_merger()
+    elif args.subcommand == 'png':
+        create_png()
     elif args.subcommand == 'cut':
         timestamp_cutter()
     elif args.subcommand == 'glue':
