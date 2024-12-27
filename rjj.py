@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.9.4"
+__version__="0.9.5"
 
 import argparse, io, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -21,6 +21,21 @@ def list_json_files():
 
 def list_html_files():
     return [f for f in os.listdir() if f.endswith('.html')]
+
+def csv_to_txt():
+    csv_files = list_csv_files()
+    for csv_file in csv_files:
+        txt_file = os.path.splitext(csv_file)[0] + '.txt'
+        try:
+            with open(csv_file, 'r', newline='', encoding='utf-8') as infile, \
+                open(txt_file, 'w', newline='', encoding='utf-8') as outfile:
+                reader = csv.reader(infile)
+                for row in reader:
+                    outfile.write('\t'.join(row) + '\n')
+            print(f"Converted: {csv_file} -> {txt_file}")
+        except Exception as e:
+            print(f"Error converting {csv_file}: {e}")
+    print("Conversion completed.")
 
 def generate_png(file_path, png_width, png_height):
     from PIL import Image
@@ -3547,6 +3562,7 @@ def __init__():
     subparsers.add_parser('minify', help='minify js')
     subparsers.add_parser('mj', help='minify json')
     subparsers.add_parser('mh', help='minify html')
+    subparsers.add_parser('txt', help='convert all csv to txt')
     subparsers.add_parser('png', help='create transparent png')
     subparsers.add_parser('gif', help='create gif animation')
     subparsers.add_parser('cut', help='cut timestamp')
@@ -3598,6 +3614,8 @@ def __init__():
         base64codeHandler()
     elif args.subcommand == 'json':
         json_merger()
+    elif args.subcommand == 'txt':
+        csv_to_txt()
     elif args.subcommand == 'gif':
         create_gif()
     elif args.subcommand == 'png':
