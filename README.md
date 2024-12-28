@@ -407,7 +407,7 @@ create a gif animation with picture, transition time and loop specified 🎬
 rjj gif
 ```
 #### prompt
-generate randon prompt/descriptor(s) from json source
+generate random prompt/descriptor(s) from json source
 ```
 rjj prompt
 ```
