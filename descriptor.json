@@ -1,0 +1,28 @@
+{
+    "subject": ["anime girl", "anime boy", "anime young lady", "anime school girl"],
+    "hair_color": ["golden", "jet-black", "snowy white", "silvery", "dark brown", "caramel-colored", "teal", "violet", "chestnut brown", "soft pink", "blue-gray", "black and white", "rainbow-colored", "midnight-black", "shimmering golden", "bright orange", "glowing silver", "soft gray", "pastel peach", "platinum blonde"],
+    "eye_color": ["emerald", "piercing blue", "ruby red", "lavender", "amber", "golden", "glowing yellow", "aquamarine", "sapphire blue", "curious green", "warm brown", "playful orange", "sharp crimson", "soft lilac", "twinkling hazel", "icy blue", "sparkling pink", "mischievous teal"],
+    "scene": [
+        "standing under a cherry blossom tree as petals fall around them",
+        "floating in zero gravity amidst a backdrop of stars and a nearby nebula",
+        "brewing a potion in a glowing cauldron inside a mystical forest",
+        "serving tea with a delicate smile in an elegant Victorian-style parlor",
+        "climbing a mountain trail with a breathtaking sunrise in the background",
+        "jogging through a park with vibrant autumn leaves",
+        "dancing gracefully in a grand, glittering ballroom",
+        "sketching in a notebook under a tree on a sunny day",
+        "standing bravely on a battlefield with swords scattered around",
+        "gazing out at the ocean from a ship's deck",
+        "expertly tossing a wok in a bustling street food market",
+        "reading a book by a fireplace with a mug of hot cocoa",
+        "discovering ancient ruins in a lush jungle",
+        "playing a guitar under the moonlight at a seaside bonfire",
+        "splashing water in a clear, sparkling lake",
+        "standing confidently on a hilltop during a storm",
+        "tending to flowers in a sunlit meadow",
+        "painting a vibrant mural on a city wall",
+        "performing a spell in front of a fascinated crowd",
+        "dancing among glowing fireflies in a mystical glade",
+        "investigating clues under a streetlight on a rainy night"
+    ]
+}
