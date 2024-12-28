@@ -22,7 +22,6 @@ def list_json_files():
 def list_html_files():
     return [f for f in os.listdir() if f.endswith('.html')]
 
-
 def load_descriptors_from_json():
     json_files = list_json_files()
     if not json_files:
