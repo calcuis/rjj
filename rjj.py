@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.9.5"
+__version__="0.9.6"
 
 import argparse, io, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -21,6 +21,74 @@ def list_json_files():
 
 def list_html_files():
     return [f for f in os.listdir() if f.endswith('.html')]
+
+
+def load_descriptors_from_json():
+    json_files = list_json_files()
+    if not json_files:
+        print("No JSON files found in the current directory.")
+        return None
+    print("Available JSON files:")
+    for idx, filename in enumerate(json_files, start=1):
+        print(f"{idx}: {filename}")
+    try:
+        choice = int(input("Select a JSON file by entering its number: "))
+        if 1 <= choice <= len(json_files):
+            with open(json_files[choice - 1], 'r', encoding='utf-8') as file:
+                return json.load(file)
+        else:
+            print("Invalid choice.")
+            return None
+    except (ValueError, IndexError):
+        print("Invalid input. Please enter a valid number.")
+        return None
+
+def get_column_info(descriptors):
+    column_mapping = {}
+    keys = list(descriptors.keys())
+    print("Available columns:")
+    for idx, key in enumerate(keys, start=1):
+        print(f"{idx}: {key}")
+    try:
+        for column_name in ["subject", "hair color", "eye color", "scene"]:
+            choice = int(input(f"Select the column number for '{column_name}': "))
+            if 1 <= choice <= len(keys):
+                column_mapping[column_name] = descriptors[keys[choice - 1]]
+            else:
+                print("Invalid choice.")
+                return None
+        return column_mapping
+    except ValueError:
+        print("Invalid input. Please enter valid numbers.")
+        return None
+
+def select_descriptor_component(column_mapping):
+    subject = random.choice(column_mapping["subject"])
+    hair_color = random.choice(column_mapping["hair color"])
+    eye_color = random.choice(column_mapping["eye color"])
+    scene = random.choice(column_mapping["scene"])
+    return f"A {hair_color} haired {subject} with {eye_color} eyes, {scene}."
+
+def generate_txt_descriptor():
+    descriptors = load_descriptors_from_json()
+    if not descriptors:
+        return
+    column_mapping = get_column_info(descriptors)
+    if not column_mapping:
+        return
+    try:
+        num_descriptors = int(input("Enter the number of descriptors to generate: "))
+        if num_descriptors <= 0:
+            print("Please enter a positive number.")
+            return
+        for i in range(1, num_descriptors + 1):
+            descriptor = select_descriptor_component(column_mapping)
+            filename = f"{i}.txt"
+            with open(filename, "w", encoding="utf-8") as file:
+                file.write(descriptor)
+        print(f"{num_descriptors} descriptors generated and saved in separate text files.")
+    except ValueError:
+        print("Invalid input. Please enter a valid number.")
 
 def csv_to_txt():
     csv_files = list_csv_files()
@@ -3559,6 +3627,7 @@ def __init__():
     subparsers.add_parser('point', help='compute point')
     subparsers.add_parser('output', help='output as csv and json')
     subparsers.add_parser('report', help='generate report')
+    subparsers.add_parser('prompt', help='generate random prompt from json')
     subparsers.add_parser('minify', help='minify js')
     subparsers.add_parser('mj', help='minify json')
     subparsers.add_parser('mh', help='minify html')
@@ -3636,6 +3705,8 @@ def __init__():
         generate_reports()
     elif args.subcommand == 'output':
         output_as_csv_json()
+    elif args.subcommand == 'prompt':
+        generate_txt_descriptor()
     elif args.subcommand == 's':
         spliter()
     elif args.subcommand == 'b':
