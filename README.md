@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.9.6-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.9.7-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis wizard 👻🛠⚙
 
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/rjj.gif" width="128" height="128">](https://github.com/calcuis/rjj)
@@ -372,9 +372,14 @@ glue columns: Year, Month, Day and Time together as timestamp
 rjj glue
 ```
 #### minify
-minify js code/file
+minify all py file(s) in the current directory (original file will be replaced)
 ```
 rjj minify
+```
+#### js minifier
+minify js code/file
+```
+rjj ms
 ```
 #### html minifier
 minify html
