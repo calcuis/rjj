@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.9.6"
+__version__="0.9.7"
 
 import argparse, io, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -21,6 +21,43 @@ def list_json_files():
 
 def list_html_files():
     return [f for f in os.listdir() if f.endswith('.html')]
+
+def list_python_files():
+    return [f for f in os.listdir() if f.endswith('.py')]
+
+def py_minifier(file_path):
+    import ast, pyminify
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            code = file.read()
+        tree = ast.parse(code)
+        class RemoveAnnotations(ast.NodeTransformer):
+            def visit_FunctionDef(self, node):
+                node.returns = None
+                node.args.args = [ast.arg(arg=arg.arg, annotation=None) for
+                    arg in node.args.args]
+                return self.generic_visit(node)
+        tree = RemoveAnnotations().visit(tree)
+        ast.fix_missing_locations(tree)
+        minified_code = pyminify.to_source(tree)
+        minified_code = '\n'.join(line for line in minified_code.splitlines
+            () if line.strip() and not line.strip().startswith('#'))
+        minified_file = f'{os.path.basename(file_path)}'
+        with open(minified_file, 'w', encoding='utf-8') as file:
+            file.write(minified_code)
+        print(f'Overwritten the orignal content and saved as: {minified_file}')
+    except Exception as e:
+        print(f'Error while minifying the file {file_path}: {e}')
+
+def minify_py():
+    python_files = list_python_files()
+    if not python_files:
+        print('No Python files found in the current directory.')
+    else:
+        print('Minifying all Python files in the current directory...')
+        for file in python_files:
+            py_minifier(file)
+        print('All files have been minified.')
 
 def load_descriptors_from_json():
     json_files = list_json_files()
@@ -3627,7 +3664,8 @@ def __init__():
     subparsers.add_parser('output', help='output as csv and json')
     subparsers.add_parser('report', help='generate report')
     subparsers.add_parser('prompt', help='generate random prompt from json')
-    subparsers.add_parser('minify', help='minify js')
+    subparsers.add_parser('minify', help='minify py')
+    subparsers.add_parser('ms', help='minify js')
     subparsers.add_parser('mj', help='minify json')
     subparsers.add_parser('mh', help='minify html')
     subparsers.add_parser('txt', help='convert all csv to txt')
@@ -3692,12 +3730,14 @@ def __init__():
         timestamp_cutter()
     elif args.subcommand == 'glue':
         timestamp_glue()
-    elif args.subcommand == 'mh':
-        html_minifier()
     elif args.subcommand == 'mj':
         minify_json()
-    elif args.subcommand == 'minify':
+    elif args.subcommand == 'ms':
         minifyjs()
+    elif args.subcommand == 'mh':
+        html_minifier()
+    elif args.subcommand == 'minify':
+        minify_py()
     elif args.subcommand == 'point':
         compute_point()
     elif args.subcommand == 'report':
