@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.9.7-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-0.9.8-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis wizard 👻🛠⚙
 
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/rjj.gif" width="128" height="128">](https://github.com/calcuis/rjj)
@@ -415,6 +415,11 @@ rjj gif
 generate random txt prompt/descriptor(s) from json source (see [sample](https://github.com/calcuis/rjj/blob/main/descriptor.json))
 ```
 rjj prompt
+```
+#### read
+read a data file and print the content to console
+```
+rjj read
 ```
 #### code
 encode and/or decode
