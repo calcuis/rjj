@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.9.8"
+__version__="0.9.9"
 
 import argparse, io, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -3751,7 +3751,7 @@ def __init__():
     elif args.subcommand == 'home':
         print("activating browser...")
         import webbrowser
-        webbrowser.open("https://7look.org")
+        webbrowser.open("https://rjj.gguf.org")
     elif args.subcommand == 'join':
         joint()
     elif args.subcommand == 'code':
