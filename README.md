@@ -431,4 +431,4 @@ vist rjj's dirty house 👻🏰
 ```
 rjj home
 ```
-🏩 *home sweet home ~~~ [7look.org](https://7look.org)*
+🏩 *home sweet home ~~~ [https://rjj.gguf.org](https://rjj.gguf.org/)*
