@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="0.9.9"
+__version__="1.0.0"
 
 import argparse, io, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -26,8 +26,7 @@ def list_python_files():
     return [f for f in os.listdir() if f.endswith('.py')]
 
 def list_data_files():
-    files = [f for f in os.listdir('.') if os.path.isfile(f) and f.endswith(('.txt', '.csv', '.json'))]
-    return files
+    return [f for f in os.listdir('.') if os.path.isfile(f) and f.endswith(('.txt', '.csv', '.json'))]
 
 def data_file_reader(file_name):
     if file_name.endswith('.txt'):
