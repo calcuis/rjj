@@ -1,4 +1,4 @@
-### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-1.0.0-black?logo=github)](https://github.com/calcuis/rjj/releases)
+### rjj (read-joint-jet) [![Static Badge](https://img.shields.io/badge/ver-1.0.1-black?logo=github)](https://github.com/calcuis/rjj/releases)
 rjj is a simple cmd-based data transforming/analysis wizard 👻🛠⚙
 
 [<img src="https://raw.githubusercontent.com/calcuis/rjj/master/rjj.gif" width="128" height="128">](https://github.com/calcuis/rjj)
@@ -375,6 +375,11 @@ rjj glue
 minify all py file(s) in the current directory (original file will be replaced)
 ```
 rjj minify
+```
+#### py minifier
+minify all py file(s) in the current directory and its subdirectories (original file will be replaced)
+```
+rjj my
 ```
 #### js minifier
 minify js code/file
