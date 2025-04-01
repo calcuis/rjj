@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="1.0.1"
+__version__="1.0.2"
 
 import argparse, io, os, json, csv, glob, hashlib, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -89,7 +89,7 @@ def py_minifier2(file_path):
         minified_file = os.path.join(os.path.dirname(file_path), f'{os.path.basename(file_path)}')
         with open(minified_file, 'w', encoding='utf-8') as file:
             file.write(minified_code)
-        print(f'Overwritten the orignal content and saved as: {minified_file}')
+        print(f'Overwritten the original content and saved as: {minified_file}')
     except Exception as e:
         print(f'Error while minifying the file {file_path}: {e}')
 
@@ -113,7 +113,7 @@ def py_minifier(file_path):
         minified_file = f'{os.path.basename(file_path)}'
         with open(minified_file, 'w', encoding='utf-8') as file:
             file.write(minified_code)
-        print(f'Overwritten the orignal content and saved as: {minified_file}')
+        print(f'Overwritten the original content and saved as: {minified_file}')
     except Exception as e:
         print(f'Error while minifying the file {file_path}: {e}')
 
