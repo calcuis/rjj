@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-__version__="1.0.3"
+__version__="1.0.4"
 
 import argparse, io, os, json, csv, glob, hashlib, tempfile, warnings, base64, random, math
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -22,6 +22,9 @@ def list_json_files():
 def list_html_files():
     return [f for f in os.listdir() if f.endswith('.html')]
 
+def list_png_files():
+    return [f for f in os.listdir() if f.endswith('.png')]
+
 def list_python_files():
     return [f for f in os.listdir() if f.endswith('.py')]
 
@@ -35,6 +38,26 @@ def list_py_files(directory="."):
             if file.endswith(".py"):
                 python_files.append(os.path.join(root, file))
     return python_files
+
+def png2ico():
+    png_images = list_png_files()
+    if png_images:
+        print("PNG image(s) available. Select which one to convert:")
+        for index, file_name in enumerate(png_images, start=1):
+            print(f"{index}. {file_name}")
+        choice = input(f"Enter your choice (1 to {len(png_images)}): ")
+        try:
+            choice_index=int(choice)-1
+            selected_file=png_images[choice_index]
+            print(f"PNG image: {selected_file} is selected!")
+            from PIL import Image
+            png_image = Image.open(selected_file)
+            png_image.save("icon.ico", format='ICO', sizes=[(32, 32)])
+            print("Done; converted to icon.ico and saved in the same directory.")
+        except (ValueError, IndexError):
+            print("Invalid choice. Please enter a valid number.")
+    else:
+        print("No PNG images are available in the current directory.")
 
 def data_file_reader(file_name):
     if file_name.endswith('.txt'):
@@ -3866,6 +3889,7 @@ def __init__():
     subparsers.add_parser('txt', help='convert all csv to txt')
     subparsers.add_parser('png', help='create transparent png')
     subparsers.add_parser('gif', help='create gif animation')
+    subparsers.add_parser('ico', help='convert png to ico')
     subparsers.add_parser('cut', help='cut timestamp')
     subparsers.add_parser('glue', help='glue timestamp')
     subparsers.add_parser('code', help='encode or decode')
@@ -3926,6 +3950,8 @@ def __init__():
         create_gif()
     elif args.subcommand == 'png':
         create_png()
+    elif args.subcommand == 'ico':
+        png2ico()
     elif args.subcommand == 'cut':
         timestamp_cutter()
     elif args.subcommand == 'glue':
